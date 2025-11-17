@@ -31,7 +31,6 @@ const TrendDailyReport: React.FC = () => {
 
    // const API_URL = "http://localhost:8000";
 
-  // 📦 Load daftar site
   useEffect(() => {
     axios
       .get(`${API_URL}/admin/transport/get-site-list`, { withCredentials: true })
