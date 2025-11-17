@@ -1,0 +1,22 @@
+/* 🔹 Responsif font untuk mobile */
+.small-text {
+  font-size: 0.85rem;
+}
+
+@media (max-width: 768px) {
+  .small-text {
+    font-size: 0.78rem !important;
+  }
+
+  .recharts-text {
+    font-size: 9px !important;
+  }
+
+  .recharts-legend-item-text {
+    font-size: 10px !important;
+  }
+
+  .recharts-tooltip-wrapper {
+    font-size: 10px !important;
+  }
+}

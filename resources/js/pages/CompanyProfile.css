@@ -1,0 +1,43 @@
+/* Smooth card */
+.card {
+    border-radius: 18px !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+}
+
+/* Large radius */
+.rounded-4 {
+    border-radius: 20px !important;
+}
+
+/* HP padding fix */
+@media (max-width: 576px) {
+    .content {
+        padding-left: 12px !important;
+        padding-right: 12px !important;
+    }
+    h1, h2, h3, h4, h5 {
+        line-height: 1.25 !important;
+    }
+    .card-body {
+        padding: 16px 18px !important;
+    }
+}
+
+/* Hero image smooth overlay */
+.hero-title {
+    text-shadow: 0 2px 6px rgba(0,0,0,0.4);
+}
+
+/* Fix text wrap */
+.text-truncate {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+@media (max-width: 576px) {
+    .text-truncate {
+        white-space: normal;
+    }
+}
