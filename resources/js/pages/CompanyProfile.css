@@ -41,3 +41,89 @@
         white-space: normal;
     }
 }
+
+.fade-in {
+    animation: fadeIn 0.8s ease forwards;
+    opacity: 0;
+}
+
+.slide-up {
+    animation: slideUp 0.8s ease forwards;
+    opacity: 0;
+    transform: translateY(20px);
+}
+
+.card-hover {
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+}
+
+@keyframes fadeIn {
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes slideUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Wadah gambar hero */
+.hero-image-wrapper {
+    width: 100%;
+    height: 220px;
+    min-height: 220px;
+    overflow: hidden;
+    border-radius: 12px;
+    position: relative;
+}
+
+/* Optimalkan gambar */
+.hero-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+
+    /* Smooth load */
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+/* Saat gambar sudah load */
+.hero-image[src] {
+    opacity: 1;
+}
+
+/* Overlay gradient */
+.hero-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(
+        to top,
+        rgba(0, 0, 0, 0.75) 0%,
+        rgba(0, 0, 0, 0.4) 50%,
+        transparent 100%
+    );
+    pointer-events: none;
+}
+
+/* Responsiveness untuk mobile */
+@media (max-width: 576px) {
+    .hero-image-wrapper {
+        height: 160px;
+        min-height: 160px;
+    }
+}
+
+
