@@ -187,6 +187,12 @@
                                         SCM Transport Profile
                                     </a>
                                 </li>
+                                <li>
+                                    <a href="{{ route('scmcrud.view') }}">
+                                        SCM Transport Config
+                                    </a>
+                                </li>
+
                             </ul>
                         </li>
 

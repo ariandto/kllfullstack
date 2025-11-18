@@ -29,17 +29,20 @@ import {
     Pie,
     Cell,
 } from "recharts";
+import API_URL from "../config/api";
 
 
 const CompanyProfile = () => {
-    const API_URL = "http://localhost:8000"; 
     const [facilities, setFacilities] = useState<any[]>([]);
     const [selectedFacility, setSelectedFacility] = useState<string>("");
     const [pivotData, setPivotData] = useState<any | null>(null);
     const [loadingFacility, setLoadingFacility] = useState<boolean>(true);
     const [loadingPivot, setLoadingPivot] = useState<boolean>(false);
+    const [jalurData, setJalurData] = useState<any[]>([]);
+    const totalCoverageJalur = new Set(jalurData.map(j => j.jalur)).size;
+    const [showDetailJalur, setShowDetailJalur] = useState(false);
+    const [showDetailModal, setShowDetailModal] = useState(false);
 
-    
 
     useEffect(() => {
         const loadFacilities = async () => {
@@ -72,6 +75,8 @@ const CompanyProfile = () => {
                 ...data.facility_detail[0],
                 armada: data.data ?? [],
             });
+
+            setJalurData(data.jalur || []);
         } catch (error) {
             console.error("Error loading pivot data:", error);
         } finally {
@@ -108,6 +113,23 @@ const CompanyProfile = () => {
         return "bg-success";
     };
 
+const prepareJalurChartData = () => {
+    if (!jalurData.length) return [];
+
+    const countMap: Record<string, number> = {};
+
+    jalurData.forEach((j: any) => {
+        const name = String(j?.jalur ?? "");
+        if (!name) return;
+        countMap[name] = (countMap[name] || 0) + 1;
+    });
+
+    return Object.keys(countMap).map(k => ({
+        name: k,
+        value: countMap[k] ?? 0,
+    }));
+};
+
     return (
         <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fffcfcff 0%, #f1e8e8ff 100%)" }}>
             <div className="content container-fluid px-3 px-md-5 mb-5 py-4">
@@ -118,9 +140,6 @@ const CompanyProfile = () => {
                             <h1 className="display-5 fw-bold text-dark mb-2">
                                 SCM Transport Profile
                             </h1>
-                            <p className="text-white-50 mb-0">
-                                Strategic Facility & Fleet Management Dashboard
-                            </p>
                         </div>
                        
                     </div>
@@ -185,7 +204,7 @@ const CompanyProfile = () => {
                                 <span className="visually-hidden">Loading...</span>
                             </div>
                             <p className="text-primary fw-semibold fs-5 mb-0">
-                                Loading facility analytics...
+                                Loading facility ...
                             </p>
                         </div>
                     </div>
@@ -302,7 +321,7 @@ const CompanyProfile = () => {
 
                             {/* Total Fleet Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
                                     <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)" }}>
                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                             <div className="text-white">
@@ -336,7 +355,7 @@ const CompanyProfile = () => {
 
                             {/* CBM Capacity Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
                                     <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #fb9393ff 0%, #f5576c 100%)" }}>
                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                             <div className="text-white">
@@ -353,7 +372,7 @@ const CompanyProfile = () => {
                                             </div>
                                         </div>
                                         <div className="mt-3 text-white small">
-                                            <strong>Cubic Meter</strong> Storage
+                                            <strong>Cubic Meter</strong>
                                         </div>
                                     </div>
                                 </div>
@@ -361,7 +380,7 @@ const CompanyProfile = () => {
 
                             {/* Manpower Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
                                     <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}>
                                         <div className="d-flex justify-content-between align-items-start mb-3">
                                             <div className="text-white">
@@ -390,6 +409,7 @@ const CompanyProfile = () => {
                                 </div>
                             </div>
                         </div>
+                        
 
                         {/* Charts Section */}
                         <div className="row g-4">
@@ -507,6 +527,7 @@ const CompanyProfile = () => {
                                                                     ></div>
                                                                     <small className="text-truncate fw-medium">{item.name}</small>
                                                                 </div>
+                                                                
                                                             </div>
                                                         ))}
                                                     </div>
@@ -516,6 +537,7 @@ const CompanyProfile = () => {
                                                     <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
                                                     <p className="text-muted mb-0">No fleet data to display</p>
                                                 </div>
+                                                
                                             );
                                         })()}
                                     </div>
@@ -523,6 +545,190 @@ const CompanyProfile = () => {
                             </div>
                         </div>
 
+                       {/* INFOGRAPHIC: Coverage Area & Jalur */}
+<div className="card shadow-lg border-0 rounded-4">
+  <div className="card-body p-4">
+
+    <div className="d-flex justify-content-between align-items-center mb-4">
+      <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+        <span
+  className="badge bg-info bg-opacity-10 text-info px-3 py-2"
+  style={{ cursor: "pointer" }}
+  onClick={() => setShowDetailModal(true)}
+>
+  Show Details
+</span>
+        <MapPin className="text-primary" size={24} />
+        Coverage Area
+      </h5>
+
+    </div>
+
+    {/* Summary + Donut Chart */}
+    {(() => {
+
+      if (jalurData.length === 0) return (
+        <p className="text-muted">No jalur data available</p>
+      );
+
+      const grouped: Record<string, string[]> = {};
+      jalurData.forEach(item => {
+        const area = item.area || "Unknown Area";
+        const jalur = item.jalur || "Unknown Jalur";
+        if (!grouped[area]) grouped[area] = [];
+        if (!grouped[area].includes(jalur)) grouped[area].push(jalur);
+      });
+
+      const areas = Object.keys(grouped);
+      const donutData = areas.map(area => ({
+        name: area,
+        value: grouped[area].length,
+      }));
+
+      const COLORS = ["#1034d8", "#139acf", "#4facfe", "#00f2fe", "#38ef7d", "#fb9393", "#f5576c"];
+
+      return (
+
+        <div className="row g-4">
+
+          {/* LEFT SIDE */}
+          <div className="col-12 col-lg-5">
+
+            <div className="p-3 rounded-4 shadow-sm mb-4"
+              style={{ background: "linear-gradient(135deg,#4facfe15,#00f2fe15)" }}>
+              <h6 className="fw-bold text-dark mb-3">Summary</h6>
+
+              <div className="row text-center">
+                <div className="col-6">
+                  <h2 className="fw-bold text-primary mb-0">{areas.length}</h2>
+                  <small className="text-muted">Total Area</small>
+                </div>
+                <div className="col-6">
+                  <h2 className="fw-bold text-info mb-0">{new Set(jalurData.map(j => j.jalur)).size}</h2>
+                  <small className="text-muted">Total City</small>
+                </div>
+              </div>
+            </div>
+
+            {/* Donut Chart */}
+            <div className="card border-0 shadow-sm rounded-4">
+              <div className="card-body">
+                <h6 className="fw-bold text-dark mb-3">Area Cover</h6>
+
+                <ResponsiveContainer width="100%" height={250}>
+                  <PieChart>
+                    <Pie
+                      data={donutData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={85}
+                      dataKey="value"
+                      label={({ name, value }) => `${name} (${value})`}
+                    >
+                      {donutData.map((entry, index) => (
+                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip />
+                  </PieChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+                {/* DETAIL MODAL */}
+{showDetailModal && (
+  <div
+    className="modal fade show"
+    style={{
+      display: "block",
+      background: "rgba(0,0,0,0.45)",
+      backdropFilter: "blur(4px)"
+    }}
+  >
+    <div className="modal-dialog modal-xl modal-dialog-centered">
+      <div className="modal-content shadow-lg border-0 rounded-4">
+
+        {/* HEADER */}
+        <div className="modal-header">
+          <h5 className="modal-title fw-bold d-flex align-items-center gap-2">
+            <MapPin className="text-primary" size={22} />
+            Detail Coverage Jalur & Area
+          </h5>
+          <button className="btn-close" onClick={() => setShowDetailModal(false)}></button>
+        </div>
+
+        {/* BODY */}
+        <div className="modal-body" style={{ maxHeight: "70vh", overflowY: "auto" }}>
+
+          {(() => {
+            const grouped: Record<string, string[]> = {};
+            jalurData.forEach(item => {
+              const area = item.area || "Unknown Area";
+              const jalur = item.jalur || "Unknown Jalur";
+              if (!grouped[area]) grouped[area] = [];
+              if (!grouped[area].includes(jalur)) grouped[area].push(jalur);
+            });
+
+            const COLORS = ["#1034d8", "#139acf", "#4facfe", "#00f2fe", "#38ef7d", "#fb9393", "#f5576c"];
+
+            return (
+              <div className="vstack gap-4">
+                {Object.keys(grouped).map((area, idx) => (
+                  <div key={idx}
+                    className="p-4 rounded-4 shadow-sm border-start border-4"
+                    style={{
+                      borderColor: COLORS[idx % COLORS.length],
+                      background: `${COLORS[idx % COLORS.length]}10`
+                    }}
+                  >
+                    <h6 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
+                      <Building2 size={18} />
+                      {area}
+                    </h6>
+
+                    <div className="vstack gap-2">
+                      {grouped[area].map((jalur, i) => (
+                        <div key={i}
+                          className="d-flex justify-content-between align-items-center p-2 bg-white rounded shadow-sm">
+                          <span>{jalur}</span>
+                          <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-1">
+                            Jalur
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
+
+        </div>
+
+        {/* FOOTER */}
+        <div className="modal-footer">
+          <button
+            className="btn btn-secondary px-4"
+            onClick={() => setShowDetailModal(false)}
+          >
+            Close
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+)}
+
+          </div>
+
+        </div>
+      );
+    })()}
+  </div>
+</div>
+
+                        
                         {/* Operational Details */}
                         <div className="row g-4">
                             {/* Capacity Details */}
@@ -593,7 +799,7 @@ const CompanyProfile = () => {
                                     <div className="card-body p-4">
                                         <h5 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
                                             <Users className="text-primary" size={24} />
-                                            Manpower Distribution
+                                            Manpower Total
                                         </h5>
                                         {(() => {
                                             const mppFields = [
@@ -629,34 +835,6 @@ const CompanyProfile = () => {
                                         })()}
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-
-                        {/* Location Map */}
-                        <div className="card shadow-lg border-0 rounded-4">
-                            <div className="card-body p-4">
-                                <h5 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
-                                    <MapPin className="text-primary" size={24} />
-                                    Facility Location
-                                </h5>
-                                {pivotData?.Alamat ? (
-                                    <div className="rounded-3 overflow-hidden shadow" style={{ height: "400px" }}>
-                                        <iframe
-                                            width="100%"
-                                            height="100%"
-                                            style={{ border: 0 }}
-                                            loading="lazy"
-                                            allowFullScreen
-                                            referrerPolicy="no-referrer-when-downgrade"
-                                            src={`https://www.google.com/maps?q=${encodeURIComponent(pivotData.Alamat)}&output=embed`}
-                                        ></iframe>
-                                    </div>
-                                ) : (
-                                    <div className="text-center py-5">
-                                        <MapPin className="mx-auto mb-3 text-muted" size={48} />
-                                        <p className="text-muted mb-0">No address available</p>
-                                    </div>
-                                )}
                             </div>
                         </div>
 
@@ -717,10 +895,14 @@ const CompanyProfile = () => {
                             </div>
                         </div>
                     </div>
+
+                    
                 )}
             </div>
         </div>
+        
     );
+    
 };
 
 export default CompanyProfile;

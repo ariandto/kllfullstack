@@ -67,7 +67,7 @@ use App\Http\Middleware\CustomCors;
 //use App\Models\Admin;
 use App\Http\Middleware\Admin;
 use App\Http\Controllers\Admin\Dashboard\Transport\SCMTransportProfileController;
-use App\Http\Controllers\Admin\Dashboard\Transport\UploadScmProfileController;
+use App\Http\Controllers\Admin\Dashboard\Transport\ScmCrudController;
 
 
 Route::get('/', function () {
@@ -727,12 +727,6 @@ Route::controller(TrendDailyReportController::class)->group(function () {
 
 
 
-// Route::middleware('admin')->group(function () {
-//     Route::controller(SCMTransportProfileController::class)->group(function () {
-//         Route::get('/transport/scm-profile', 'index')->name('transport.scm.profile');
-//     });
-// });
-
 Route::middleware('admin')->group(function () {
 
     // 1. React Page (halaman utama SCM Profile)
@@ -754,6 +748,17 @@ Route::middleware('admin')->group(function () {
     Route::get('/admin/transport/scm-uploader', function () {
         return view('admin.react_page');
     })->name('transport.scm.uploader');
+});
+
+Route::middleware('admin')->prefix('admin/dashboard/transport')->group(function () {
+
+    Route::get('/scmcrud', function () {
+        return view('admin.dashboard.transport.scmcrud');
+    })->name('scmcrud.view');
+
+    Route::get('/facility', [ScmCrudController::class, 'index']);
+    Route::post('/facility', [ScmCrudController::class, 'store']);
+    Route::put('/facility/{facility_ID}', [ScmCrudController::class, 'update']);
 });
 
 //PENTING JANGAN DIHAPUS YA ROUTE INI BUAT GET USER INFO

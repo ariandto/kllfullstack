@@ -46,9 +46,14 @@ class SCMTransportProfile extends Model
         // Result Set 2 → jenis armada pivot
         $armadaPivot = $stmt->fetchAll(\PDO::FETCH_ASSOC);
 
+         // Result Set 3 → jalur index
+        $stmt->nextRowset();
+        $jalurList = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
         return [
             'facility_detail' => $facilityDetail,
-            'armada_pivot' => $armadaPivot
+            'armada_pivot' => $armadaPivot,
+            'jalur_index'     => $jalurList
         ];
 
     } catch (\Exception $e) {

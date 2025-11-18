@@ -1,17 +1,11 @@
-// config/api.ts
-// Centralized API configuration for your React + TypeScript app
-// Automatically enables withCredentials for Laravel Sanctum / session-based auth
 
 import axios from "axios";
 
-// === API BASE URL ===
 export const API_URL = "http://localhost:8000";
 
-// === AXIOS GLOBAL CONFIG ===
-axios.defaults.withCredentials = true;
-axios.defaults.baseURL = `${API_URL}`;
 
-export default axios;
+
+export default API_URL
 
 //
 // production copas aja mas replace di atas

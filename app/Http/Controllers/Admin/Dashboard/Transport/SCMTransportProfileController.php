@@ -36,7 +36,7 @@ class SCMTransportProfileController extends Controller
     /**
      * Dynamic Pivot Armada — kolom bergantung pada SP SQL Server
      */
-   public function getFacilityArmadaPivot(Request $request)
+  public function getFacilityArmadaPivot(Request $request)
 {
     // Validasi request
     $validator = Validator::make($request->all(), [
@@ -54,28 +54,32 @@ class SCMTransportProfileController extends Controller
     try {
         $facilityName = $request->facility;
 
-        // result berisi:
-        // ['facility_detail' => [], 'armada_pivot' => []]
+        // Ambil 3 resultset dari model
         $result = SCMTransportProfile::getFacilityArmadaPivot($facilityName);
 
         $detail = $result['facility_detail'] ?? [];
         $pivot  = $result['armada_pivot'] ?? [];
+        $jalur  = $result['jalur_index'] ?? [];
 
+        // Jika pivot kosong, tetap kirim detail & jalur
         if (empty($pivot)) {
             return response()->json([
-                'status'  => true,
-                'message' => 'Data pivot tidak ditemukan.',
-                'data'    => [],
-                'columns' => []
+                'status'          => true,
+                'message'         => 'Data pivot tidak ditemukan.',
+                'facility_detail' => $detail,
+                'jalur'           => $jalur,
+                'data'            => [],
+                'columns'         => []
             ]);
         }
 
         return response()->json([
-            'status'  => true,
-            'message' => 'Success',
-            'facility_detail' => $detail,        // result set pertama
-            'data'    => $pivot,                 // result set kedua (pivot)
-            'columns' => array_keys($pivot[0])   // dynamic columns untuk frontend
+            'status'          => true,
+            'message'         => 'Success',
+            'facility_detail' => $detail,                // result set pertama
+            'data'            => $pivot,                 // result set kedua (pivot)
+            'columns'         => array_keys($pivot[0]),  // dynamic columns
+            'jalur'           => $jalur                  // result set ketiga
         ]);
 
     } catch (\Exception $e) {
@@ -87,3 +91,5 @@ class SCMTransportProfileController extends Controller
 }
 
 }
+
+
