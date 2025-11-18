@@ -28,22 +28,18 @@ import {
     PieChart,
     Pie,
     Cell,
-    LineChart,
-    Line,
-    RadarChart,
-    PolarGrid,
-    PolarAngleAxis,
-    PolarRadiusAxis,
-    Radar,
 } from "recharts";
-import API_URL from "../config/api";
+
 
 const CompanyProfile = () => {
+    const API_URL = "http://localhost:8000"; 
     const [facilities, setFacilities] = useState<any[]>([]);
     const [selectedFacility, setSelectedFacility] = useState<string>("");
     const [pivotData, setPivotData] = useState<any | null>(null);
     const [loadingFacility, setLoadingFacility] = useState<boolean>(true);
     const [loadingPivot, setLoadingPivot] = useState<boolean>(false);
+
+    
 
     useEffect(() => {
         const loadFacilities = async () => {
@@ -175,10 +171,8 @@ const CompanyProfile = () => {
                             <div className="mb-4">
                                 <Building2 className="mx-auto text-primary opacity-50" size={80} />
                             </div>
-                            <h3 className="fw-bold text-dark mb-2">Select a Facility to Begin</h3>
-                            <p className="text-muted fs-5 mb-0">
-                                Choose a facility from the dropdown to view comprehensive analytics and insights
-                            </p>
+                            <h3 className="fw-bold text-dark mb-2">Please Select Facility</h3>
+                            
                         </div>
                     </div>
                 )}
@@ -413,19 +407,34 @@ const CompanyProfile = () => {
                                             </span>
                                         </div>
                                         <ResponsiveContainer width="100%" height={280}>
-                                            <BarChart
-                                                data={[
-                                                    { name: "Demand", value: pivotData.Demand_DO, fill: "#62ebf5ff" },
-                                                    { name: "Capacity", value: pivotData.Capacity_DO, fill: "#32c6daff" },
-                                                ]}
-                                            >
-                                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                                                <XAxis dataKey="name" />
-                                                <YAxis />
-                                                <Tooltip />
-                                                <Bar dataKey="value" radius={[12, 12, 0, 0]} />
-                                            </BarChart>
-                                        </ResponsiveContainer>
+    <BarChart
+        data={[
+            { name: "Demand", value: pivotData.Demand_DO, fill: "#62ebf5ff" },
+            { name: "Capacity", value: pivotData.Capacity_DO, fill: "#32c6daff" },
+        ]}
+        margin={{ top: 30 }} // ruang ekstra agar label tidak ketutup
+    >
+        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+        <XAxis dataKey="name" />
+        <YAxis />
+
+        {/* Tooltip tetap ada */}
+        <Tooltip />
+
+        <Bar 
+            dataKey="value" 
+            radius={[12, 12, 0, 0]}
+            label={{
+                position: "top",
+                fill: "#000",
+                fontSize: 14,
+                fontWeight: 600,
+                formatter: (value) => `${value}`, // bisa diganti ribuan, format, dll
+            }}
+        />
+    </BarChart>
+</ResponsiveContainer>
+
                                     </div>
                                 </div>
                             </div>
@@ -437,10 +446,10 @@ const CompanyProfile = () => {
                                         <div className="d-flex justify-content-between align-items-center mb-4">
                                             <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
                                                 <Truck className="text-primary" size={24} />
-                                                Fleet Distribution
+                                                Fleet Avaibility
                                             </h5>
                                             <span className="badge bg-success bg-opacity-10 text-success px-3 py-2">
-                                                Asset Mix
+                                                Armada
                                             </span>
                                         </div>
                                         {(() => {
@@ -448,7 +457,7 @@ const CompanyProfile = () => {
                                                 return (
                                                     <div className="text-center py-4">
                                                         <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
-                                                        <p className="text-muted mb-0">No fleet data available</p>
+                                                        <p className="text-muted mb-0">No armada data available</p>
                                                     </div>
                                                 );
                                             }
@@ -462,7 +471,7 @@ const CompanyProfile = () => {
                                                 value: parseFloat(row[key]) || 0,
                                             }));
 
-                                            const COLORS = ["#0a259eff", "#139acfff", "#9593fbff", "#f5576c", "#4facfe", "#00f2fe", "#11998e", "#38ef7d"];
+                                            const COLORS = ["#1034d8ff", "#139acfff", "#9593fbff", "#f5576c", "#4facfe", "#00f2fe", "#11998e", "#38ef7d"];
 
                                             return chartData.length > 0 ? (
                                                 <>

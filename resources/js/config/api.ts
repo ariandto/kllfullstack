@@ -5,7 +5,6 @@
 import axios from "axios";
 
 // === API BASE URL ===
-// Ganti sesuai domain backend Laravel kamu
 export const API_URL = "http://localhost:8000";
 
 // === AXIOS GLOBAL CONFIG ===
