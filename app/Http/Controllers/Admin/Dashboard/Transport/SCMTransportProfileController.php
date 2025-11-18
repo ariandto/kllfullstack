@@ -9,85 +9,81 @@ use Illuminate\Support\Facades\Validator;
 
 class SCMTransportProfileController extends Controller
 {
+
     /**
-     * Halaman utama
+     * Get list of facilities
      */
-    // public function index()
-    // {
-    //     $facilities = SCMTransportProfile::getFacilityList();
-    //     return view('admin.dashboard.transport.scm-profile', compact('facilities'));
-    // }
-
-//     public function index()
-// {
-//     try {
-//         $facilities = SCMTransportProfile::getFacilityList();
-
-//         return response()->json([
-//             'status'  => true,
-//             'message' => 'Success',
-//             'facilities' => $facilities
-//         ]);
-
-//     } catch (\Exception $e) {
-//         return response()->json([
-//             'status'  => false,
-//             'message' => 'Error: ' . $e->getMessage()
-//         ], 500);
-//     }
-// }
     public function getFacilityList()
+    {
+        try {
+            $facilities = SCMTransportProfile::getFacilityList();
+
+            return response()->json([
+                'status'     => true,
+                'message'    => 'Success',
+                'facilities' => $facilities ?? []
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Error fetching facility list: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+
+    /**
+     * Dynamic Pivot Armada — kolom bergantung pada SP SQL Server
+     */
+   public function getFacilityArmadaPivot(Request $request)
 {
+    // Validasi request
+    $validator = Validator::make($request->all(), [
+        'facility' => 'required|string|max:100',
+    ]);
+
+    if ($validator->fails()) {
+        return response()->json([
+            'status'  => false,
+            'message' => 'Validasi gagal.',
+            'errors'  => $validator->errors()
+        ], 422);
+    }
+
     try {
-        $facilities = SCMTransportProfile::getFacilityList();
+        $facilityName = $request->facility;
+
+        // result berisi:
+        // ['facility_detail' => [], 'armada_pivot' => []]
+        $result = SCMTransportProfile::getFacilityArmadaPivot($facilityName);
+
+        $detail = $result['facility_detail'] ?? [];
+        $pivot  = $result['armada_pivot'] ?? [];
+
+        if (empty($pivot)) {
+            return response()->json([
+                'status'  => true,
+                'message' => 'Data pivot tidak ditemukan.',
+                'data'    => [],
+                'columns' => []
+            ]);
+        }
 
         return response()->json([
-            'status'     => true,
-            'facilities' => $facilities
+            'status'  => true,
+            'message' => 'Success',
+            'facility_detail' => $detail,        // result set pertama
+            'data'    => $pivot,                 // result set kedua (pivot)
+            'columns' => array_keys($pivot[0])   // dynamic columns untuk frontend
         ]);
 
     } catch (\Exception $e) {
         return response()->json([
             'status'  => false,
-            'message' => 'Error: ' . $e->getMessage()
+            'message' => 'Error fetching pivot armada: ' . $e->getMessage()
         ], 500);
     }
 }
 
-
-    /**
-     * Ambil data Facility dengan Pivot Armada Dinamis
-     * Contoh panggilan: /scm-profile/armada?facility=HUB - HUB UTARA
-     */
-    public function getFacilityArmadaPivot(Request $request)
-    {
-        // Validasi input
-        $validator = Validator::make($request->all(), [
-            'facility' => 'required|string'
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Parameter facility wajib diisi.',
-                'errors'  => $validator->errors()
-            ], 422);
-        }
-
-        try {
-            $facilityName = $request->facility;
-            $data = SCMTransportProfile::getFacilityArmadaPivot($facilityName);
-
-            return response()->json([
-                'status'  => true,
-                'message' => 'Success',
-                'data'    => $data
-            ]);
-        } catch (\Exception $e) {
-            return response()->json([
-                'status'  => false,
-                'message' => 'Error: ' . $e->getMessage()
-            ], 500);
-        }
-    }
 }

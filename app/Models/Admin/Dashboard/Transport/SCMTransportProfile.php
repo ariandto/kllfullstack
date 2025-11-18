@@ -1,35 +1,59 @@
 <?php
 
 namespace App\Models\Admin\Dashboard\Transport;
+
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
-
 class SCMTransportProfile extends Model
 {
-    // Model ini pakai stored procedure, jadi tidak terhubung langsung ke tabel
     protected $connection = 'sqlsrv';
 
+    /**
+     * Get list of facility
+     */
     public static function getFacilityList()
     {
         try {
             $query = "EXEC [dbo].[udsp_Get_Data] 'Get SCM Facility', '', ''";
-            return DB::select($query);
+            $result = DB::select($query);
+
+            return json_decode(json_encode($result), true); // return array
         } catch (\Exception $e) {
             throw new \Exception('Error executing stored procedure Get SCM Facility: ' . $e->getMessage());
         }
     }
 
-    public static function getFacilityArmadaPivot($facilityName)
+    
+   public static function getFacilityArmadaPivot($facilityName)
 {
+    if (empty($facilityName)) {
+        throw new \InvalidArgumentException("Facility name is required.");
+    }
+
     try {
-        $query = "EXEC dbo.sp_GetFacilityArmadaPivot ?";
-        return DB::select($query, [$facilityName]);
+        $pdo = DB::connection('sqlsrv')->getPdo();
+
+        $stmt = $pdo->prepare("EXEC dbo.sp_GetFacilityArmadaPivot ?");
+        $stmt->execute([$facilityName]);
+
+        // Result Set 1 → detail facility
+        $facilityDetail = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        // Pindah ke result set ke-2
+        $stmt->nextRowset();
+
+        // Result Set 2 → jenis armada pivot
+        $armadaPivot = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+
+        return [
+            'facility_detail' => $facilityDetail,
+            'armada_pivot' => $armadaPivot
+        ];
+
     } catch (\Exception $e) {
         throw new \Exception('Error executing SP GetFacilityArmadaPivot: ' . $e->getMessage());
     }
 }
 
-
-    
 }

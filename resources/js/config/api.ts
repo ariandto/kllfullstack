@@ -17,7 +17,7 @@ export default axios;
 //
 // production copas aja mas replace di atas
 
-// const API_URL = https://scmlogisticapps.klgsys.com
+// export const API_URL = https://scmlogisticapps.klgsys.com
 
 
 

@@ -10,6 +10,12 @@ import {
     BarChart3,
     TrendingUp,
     AlertCircle,
+    Users,
+    Activity,
+    Target,
+    Award,
+    Zap,
+    Shield,
 } from "lucide-react";
 import {
     BarChart,
@@ -22,28 +28,22 @@ import {
     PieChart,
     Pie,
     Cell,
+    LineChart,
+    Line,
+    RadarChart,
+    PolarGrid,
+    PolarAngleAxis,
+    PolarRadiusAxis,
+    Radar,
 } from "recharts";
-import "./CompanyProfile.css";
-import { motion } from "framer-motion";
-import { Helmet } from "react-helmet";
+import API_URL from "../config/api";
 
-interface Facility {
-    Facility: string;
-}
-
-interface PivotResponse {
-    [key: string]: any;
-}
-
-const CompanyProfile: React.FC = () => {
-    const [facilities, setFacilities] = useState<Facility[]>([]);
+const CompanyProfile = () => {
+    const [facilities, setFacilities] = useState<any[]>([]);
     const [selectedFacility, setSelectedFacility] = useState<string>("");
-    const [pivotData, setPivotData] = useState<PivotResponse | null>(null);
+    const [pivotData, setPivotData] = useState<any | null>(null);
     const [loadingFacility, setLoadingFacility] = useState<boolean>(true);
     const [loadingPivot, setLoadingPivot] = useState<boolean>(false);
-
-    const API_URL = "http://localhost:8000";
-    //const API_URL = "https://scmlogisticapps.klgsys.com";
 
     useEffect(() => {
         const loadFacilities = async () => {
@@ -62,7 +62,7 @@ const CompanyProfile: React.FC = () => {
         loadFacilities();
     }, []);
 
-    const fetchPivotData = async (facilityName: string) => {
+    const fetchPivotData = async (facilityName: string): Promise<void> => {
         setLoadingPivot(true);
         try {
             const res = await fetch(
@@ -72,7 +72,10 @@ const CompanyProfile: React.FC = () => {
                 { credentials: "include" }
             );
             const data = await res.json();
-            setPivotData(data.data[0] || null);
+            setPivotData({
+                ...data.facility_detail[0],
+                armada: data.data ?? [],
+            });
         } catch (error) {
             console.error("Error loading pivot data:", error);
         } finally {
@@ -90,928 +93,624 @@ const CompanyProfile: React.FC = () => {
     const imgUrl = pivotData?.Background_Image
         ? pivotData.Background_Image.startsWith("https")
             ? pivotData.Background_Image
-            : `${API_URL}/images/facilities/${pivotData.Background_Image}` // local file
+            : `${API_URL}/images/facilities/${pivotData.Background_Image}`
         : null;
 
+    const utilizationRate = pivotData?.Capacity_DO > 0
+        ? Math.round((pivotData.Demand_DO / pivotData.Capacity_DO) * 100)
+        : 0;
+
+    const getUtilizationColor = (rate: number) => {
+        if (rate >= 90) return "text-danger";
+        if (rate >= 70) return "text-warning";
+        return "text-success";
+    };
+
+    const getUtilizationBg = (rate: number) => {
+        if (rate >= 90) return "bg-danger";
+        if (rate >= 70) return "bg-warning";
+        return "bg-success";
+    };
+
     return (
-        <>
-            <Helmet>
-                <title>SCM Transport Profile</title>
-            </Helmet>
-
-            <div
-                style={{
-                    minHeight: "100vh",
-                    background:
-                        "linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)",
-                }}
-            >
-                <div className="content pb-5 pb-md-6">
-                    {/* Header */}
-                    <div className="mt-5">
-                        <div className="d-flex align-items-center gap-2 mb-10 mt-5">
-                            {/* <div className="p-2 bg-primary rounded">
-                            <MapPin className="text-white" size={20} />
-                        </div> */}
-
-                            <motion.h1
-                                className="display-6 fw-bold text-dark mb-2 mt-2"
-                                initial={{ opacity: 0, y: -20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ duration: 0.6, ease: "easeOut" }}
-                            >
+        <div style={{ minHeight: "100vh", background: "linear-gradient(135deg, #fffcfcff 0%, #f1e8e8ff 100%)" }}>
+            <div className="content container-fluid px-3 px-md-5 mb-5 py-4">
+                {/* Premium Header */}
+                <div className="mb-4">
+                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
+                        <div>
+                            <h1 className="display-5 fw-bold text-dark mb-2">
                                 SCM Transport Profile
-                            </motion.h1>
+                            </h1>
+                            <p className="text-white-50 mb-0">
+                                Strategic Facility & Fleet Management Dashboard
+                            </p>
                         </div>
-                        {/* <p className="text-muted ms-0 ms-md-5 ps-0 ps-md-2 small">Facility and Fleet Management System</p> */}
+                       
                     </div>
+                </div>
 
-                    {/* Facility Selector Card */}
-                    <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 mb-4">
-                        <div className="card-body p-3 p-md-4">
-                            <label className="form-label fw-semibold text-dark mb-2 mb-md-3">
-                                Select Facility
-                            </label>
-
-                            {loadingFacility ? (
-                                <div className="d-flex align-items-center gap-2 text-muted">
-                                    <div
-                                        className="spinner-border spinner-border-sm text-primary"
-                                        role="status"
-                                    >
-                                        <span className="visually-hidden">
-                                            Loading...
-                                        </span>
-                                    </div>
-                                    <span>Loading facilities...</span>
-                                </div>
-                            ) : (
-                                <select
-                                    className="form-select form-select-lg shadow-sm"
-                                    value={selectedFacility}
-                                    onChange={handleFacilityChange}
-                                    style={{ borderWidth: "2px" }}
-                                >
-                                    <option value="">
-                                        -- Choose Facility --
-                                    </option>
-                                    {facilities.map((f, idx) => (
-                                        <option key={idx} value={f.Facility}>
-                                            {f.Facility}
-                                        </option>
-                                    ))}
-                                </select>
-                            )}
-                        </div>
-                    </div>
-
-                    {/* Empty State */}
-                    {!selectedFacility && !loadingPivot && (
-                        <div className="card shadow-sm border-0 rounded-4">
-                            <div className="card-body text-center py-5">
-                                <Building2
-                                    className="mx-auto mb-3 text-muted"
-                                    size={64}
-                                />
-                                <p className="text-muted fs-5 mb-0">
-                                    Please select a facility to view details
-                                </p>
+                {/* Facility Selector - Premium Style */}
+                <div className="card shadow-lg border-0 rounded-4 mb-4" style={{ background: "rgba(255, 255, 255, 0.95)", backdropFilter: "blur(10px)" }}>
+                    <div className="card-body p-4">
+                        <div className="row align-items-center">
+                            <div className="col-md-3">
+                                <label className="form-label fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                                    <Building2 size={20} className="text-primary" />
+                                    Select Facility
+                                </label>
                             </div>
-                        </div>
-                    )}
-
-                    {/* Loading State */}
-                    {loadingPivot && (
-                        <div className="card shadow-sm border-0 rounded-4">
-                            <div className="card-body text-center py-5">
-                                <div
-                                    className="spinner-border text-primary mb-3"
-                                    role="status"
-                                >
-                                    <span className="visually-hidden">
-                                        Loading...
-                                    </span>
-                                </div>
-                                <p className="text-primary fw-semibold mb-0">
-                                    Loading facility data...
-                                </p>
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Facility Data */}
-                    {pivotData && (
-                        <div className="vstack gap-4">
-                            {/* Hero Section with Image */}
-                            <div className="card shadow border-0 rounded-4 overflow-hidden">
-                                {imgUrl && (
-                                    <div
-                                        className="position-relative hero-image-wrapper"
-                                        style={{
-                                            height: "400px",
-                                            minHeight: "200px",
-                                        }}
-                                    >
-                                        <img
-                                            src={imgUrl}
-                                            alt="Facility"
-                                            className="w-100 h-100 object-fit-cover"
-                                            style={{ objectFit: "cover" }}
-                                        />
-                                        <div
-                                            className="position-absolute top-0 start-0 w-100 h-100"
-                                            style={{
-                                                background:
-                                                    "linear-gradient(to top, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0.3) 50%, transparent 100%)",
-                                            }}
-                                        ></div>
-
-                                        <div className="position-absolute bottom-0 start-0 end-0 text-white p-3 p-md-4">
-                                            <h2 className="fs-4 fs-md-3 fw-bold mb-1 mb-md-2">
-                                                {pivotData.NAME}
-                                            </h2>
-                                            <div className="d-flex align-items-center gap-2">
-                                                {/* <Truck size={18} /> */}
-                                                {/* <span className="fs-6 fs-md-5">
-                                                    {pivotData.Relasi_Armada}
-                                                </span> */}
-                                            </div>
-
-                                            {/* ADDRESS DI BAWAH NAME */}
-                                            {pivotData.Alamat && (
-                                                <div className="d-flex align-items-start gap-2 mt-1">
-                                                    <MapPin size={16} />
-                                                    <span className="small lh-sm">
-                                                        {pivotData.Alamat}
-                                                    </span>
-                                                </div>
-                                            )}
+                            <div className="col-md-9">
+                                {loadingFacility ? (
+                                    <div className="d-flex align-items-center gap-2 text-muted">
+                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
+                                            <span className="visually-hidden">Loading...</span>
                                         </div>
+                                        <span>Loading facilities...</span>
                                     </div>
+                                ) : (
+                                    <select
+                                        className="form-select form-select-lg shadow-sm border-2"
+                                        value={selectedFacility}
+                                        onChange={handleFacilityChange}
+                                        style={{ borderColor: "#66dbeaff" }}
+                                    >
+                                        <option value="">-- Choose Facility --</option>
+                                        {facilities.map((f, idx) => (
+                                            <option key={idx} value={f.Facility}>
+                                                {f.Facility}
+                                            </option>
+                                        ))}
+                                    </select>
                                 )}
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                                {/* Basic Info Grid */}
-                                <div className="card-body p-3 p-md-4">
-                                    <div className="row g-3 g-md-4">
-                                        <div className="col-12 col-sm-6 col-lg-4">
-                                            <div className="d-flex align-items-start gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-primary bg-opacity-10 rounded flex-shrink-0">
-                                                    <Building2
-                                                        className="text-primary"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-grow-1 min-w-0">
-                                                    <p className="text-muted small mb-1">
-                                                        Facility ID
-                                                    </p>
-                                                    <p className="fw-semibold text-dark mb-0 text-truncate">
-                                                        {pivotData.FACILITY_ID}
-                                                    </p>
+                {/* Empty State */}
+                {!selectedFacility && !loadingPivot && (
+                    <div className="card shadow-lg border-0 rounded-4" style={{ background: "rgba(255, 255, 255, 0.95)" }}>
+                        <div className="card-body text-center py-5">
+                            <div className="mb-4">
+                                <Building2 className="mx-auto text-primary opacity-50" size={80} />
+                            </div>
+                            <h3 className="fw-bold text-dark mb-2">Select a Facility to Begin</h3>
+                            <p className="text-muted fs-5 mb-0">
+                                Choose a facility from the dropdown to view comprehensive analytics and insights
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Loading State */}
+                {loadingPivot && (
+                    <div className="card shadow-lg border-0 rounded-4" style={{ background: "rgba(255, 255, 255, 0.95)" }}>
+                        <div className="card-body text-center py-5">
+                            <div className="spinner-border text-primary mb-3" style={{ width: "3rem", height: "3rem" }} role="status">
+                                <span className="visually-hidden">Loading...</span>
+                            </div>
+                            <p className="text-primary fw-semibold fs-5 mb-0">
+                                Loading facility analytics...
+                            </p>
+                        </div>
+                    </div>
+                )}
+
+                {/* Main Content */}
+                {pivotData && (
+                    <div className="vstack gap-4">
+                        {/* Hero Section with Gradient Overlay */}
+                        <div className="card shadow-lg border-0 rounded-4 overflow-hidden">
+                            {imgUrl && (
+                                <div className="position-relative" style={{ height: "450px" }}>
+                                    <img
+                                        src={imgUrl}
+                                        alt="Facility"
+                                        className="w-100 h-100"
+                                        style={{ objectFit: "cover" }}
+                                    />
+                                    <div
+                                        className="position-absolute top-0 start-0 w-100 h-100"
+                                        style={{
+                                            background: "linear-gradient(to top, rgba(0, 187, 171, 0.9) 0%, rgba(16, 165, 170, 0.7) 50%, transparent 100%)",
+                                        }}
+                                    ></div>
+                                    <div className="position-absolute bottom-0 start-0 end-0 text-white p-4">
+                                        <div className="row align-items-end">
+                                            <div className="col-md-8">
+                                                <h1 className="display-4 fw-bold mb-3">{pivotData.NAME}</h1>
+                                                {pivotData.Alamat && (
+                                                    <div className="d-flex align-items-start gap-2 mb-3">
+                                                        <MapPin size={20} className="mt-1 flex-shrink-0" />
+                                                        <span className="fs-5">{pivotData.Alamat}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="col-md-4 text-md-end">
+                                                <div className="badge bg-white text-dark px-4 py-2 rounded-3 fs-6 mb-2">
+                                                    <Award size={16} className="me-2" />
+                                                    {pivotData.TYPE}
                                                 </div>
                                             </div>
                                         </div>
+                                    </div>
+                                </div>
+                            )}
 
-                                        <div className="col-12 col-sm-6 col-lg-4">
-                                            <div className="d-flex align-items-start gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-success bg-opacity-10 rounded flex-shrink-0">
-                                                    <Package
-                                                        className="text-success"
-                                                        size={20}
-                                                    />
+                            {/* Key Metrics Bar */}
+                            <div className="card-body p-0" style={{ background: "linear-gradient(135deg, #667eea 0%, #0c5fdbff 100%)" }}>
+                                <div className="row g-0 text-white">
+                                    <div className="col-6 col-md-3 border-end border-white border-opacity-25 p-3 p-md-4">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <Building2 size={18} className="opacity-75" />
+                                            <small className="opacity-75">Facility ID</small>
+                                        </div>
+                                        <div className="fw-bold fs-5">{pivotData.FACILITY_ID}</div>
+                                    </div>
+                                    <div className="col-6 col-md-3 border-end border-white border-opacity-25 p-3 p-md-4">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <MapPin size={18} className="opacity-75" />
+                                            <small className="opacity-75">Zone</small>
+                                        </div>
+                                        <div className="fw-bold fs-5">{pivotData.zone}</div>
+                                    </div>
+                                    <div className="col-6 col-md-3 border-end border-white border-opacity-25 p-3 p-md-4">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <Calendar size={18} className="opacity-75" />
+                                            <small className="opacity-75">Opening Date</small>
+                                        </div>
+                                        <div className="fw-bold fs-5">{pivotData.Opening_Date}</div>
+                                    </div>
+                                    <div className="col-6 col-md-3 p-3 p-md-4">
+                                        <div className="d-flex align-items-center gap-2 mb-2">
+                                            <Phone size={18} className="opacity-75" />
+                                            <small className="opacity-75">Contact</small>
+                                        </div>
+                                        <div className="fw-bold fs-5">{pivotData.Telp}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* KPI Cards - Executive Summary */}
+                        <div className="row g-4">
+                            {/* Utilization Card */}
+                            <div className="col-12 col-md-6 col-xl-3">
+                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
+                                    <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #1e3fd4ff 0%, #33b2e4ff 100%)" }}>
+                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                            <div className="text-white">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                    <Target size={20} />
+                                                    <small className="opacity-75">Capacity Utilization</small>
                                                 </div>
-                                                <div className="flex-grow-1 min-w-0">
-                                                    <p className="text-muted small mb-1">
-                                                        Type
-                                                    </p>
-                                                    <p className="fw-semibold text-dark mb-0 text-truncate">
-                                                        {pivotData.TYPE}
-                                                    </p>
-                                                </div>
+                                                <h1 className={`display-4 fw-bold mb-0 ${getUtilizationColor(utilizationRate)}`} style={{ color: "white" }}>
+                                                    {utilizationRate}%
+                                                </h1>
+                                            </div>
+                                            <div className="p-3 bg-white bg-opacity-25 rounded-3">
+                                                <TrendingUp size={24} className="text-white" />
                                             </div>
                                         </div>
-
-                                        <div className="col-12 col-sm-6 col-lg-4">
-                                            <div className="d-flex align-items-start gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-warning bg-opacity-10 rounded flex-shrink-0">
-                                                    <MapPin
-                                                        className="text-warning"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-grow-1 min-w-0">
-                                                    <p className="text-muted small mb-1">
-                                                        Zone
-                                                    </p>
-                                                    <p className="fw-semibold text-dark mb-0 text-truncate">
-                                                        {pivotData.zone}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div className="progress bg-white bg-opacity-25" style={{ height: "8px" }}>
+                                            <div
+                                                className={`progress-bar ${getUtilizationBg(utilizationRate)}`}
+                                                style={{ width: `${Math.min(utilizationRate, 100)}%` }}
+                                            ></div>
                                         </div>
-
-                                        <div className="col-12 col-sm-6 col-lg-4">
-                                            <div className="d-flex align-items-start gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-info bg-opacity-10 rounded flex-shrink-0">
-                                                    <Calendar
-                                                        className="text-info"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-grow-1 min-w-0">
-                                                    <p className="text-muted small mb-1">
-                                                        Opening Date
-                                                    </p>
-                                                    <p className="fw-semibold text-dark mb-0 text-truncate">
-                                                        {pivotData.Opening_Date}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-12 col-sm-6 col-lg-4">
-                                            <div className="d-flex align-items-start gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-secondary bg-opacity-10 rounded flex-shrink-0">
-                                                    <Truck
-                                                        className="text-secondary"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-grow-1 min-w-0">
-                                                    <p className="text-muted small mb-1">
-                                                        Loading Dock
-                                                    </p>
-                                                    <p className="fw-semibold text-dark mb-0 text-truncate">
-                                                        {
-                                                            pivotData.Is_Loading_Dock
-                                                        }
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        <div className="col-12 col-sm-6 col-lg-4">
-                                            <div className="d-flex align-items-start gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-dark bg-opacity-10 rounded flex-shrink-0">
-                                                    <Phone
-                                                        className="text-dark"
-                                                        size={20}
-                                                    />
-                                                </div>
-                                                <div className="flex-grow-1 min-w-0">
-                                                    <p className="text-muted small mb-1">
-                                                        Phone
-                                                    </p>
-                                                    <p className="fw-semibold text-dark mb-0 text-truncate">
-                                                        {pivotData.Telp}
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div className="mt-3 text-white small">
+                                            <strong>{pivotData.Demand_DO}</strong> of <strong>{pivotData.Capacity_DO}</strong> DO Capacity
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
-                            {/* Detailed Information */}
-                            <div className="row g-4">
-                                {/* Summary Cards */}
-                                <div className="col-12">
-                                    <div className="row g-3 g-md-4">
-                                        {/* Demand vs Capacity Card */}
-                                        <div className="col-12 col-md-4">
-                                            <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100 border-start border-primary border-4">
-                                                <div className="card-body p-3 p-md-4">
-                                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                                        <div>
-                                                            <p className="text-muted small mb-1">
-                                                                Capacity
-                                                                Utilization
-                                                            </p>
-                                                            <h3 className="fw-bold text-dark mb-0">
-                                                                {pivotData.Capacity_DO >
-                                                                0
-                                                                    ? Math.round(
-                                                                          (pivotData.Demand_DO /
-                                                                              pivotData.Capacity_DO) *
-                                                                              100
-                                                                      )
-                                                                    : 0}
-                                                                %
-                                                            </h3>
-                                                        </div>
-                                                        <div className="p-2 bg-primary bg-opacity-10 rounded">
-                                                            <TrendingUp
-                                                                className="text-primary"
-                                                                size={20}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <div
-                                                        className="progress"
-                                                        style={{
-                                                            height: "8px",
-                                                        }}
-                                                    >
-                                                        <div
-                                                            className="progress-bar bg-primary"
-                                                            role="progressbar"
-                                                            style={{
-                                                                width: `${
-                                                                    pivotData.Capacity_DO >
-                                                                    0
-                                                                        ? Math.min(
-                                                                              (pivotData.Demand_DO /
-                                                                                  pivotData.Capacity_DO) *
-                                                                                  100,
-                                                                              100
-                                                                          )
-                                                                        : 0
-                                                                }%`,
-                                                            }}
-                                                        ></div>
-                                                    </div>
-                                                    <p className="text-muted small mb-0 mt-2">
-                                                        {pivotData.Demand_DO} /{" "}
-                                                        {pivotData.Capacity_DO}{" "}
-                                                        DO
-                                                    </p>
+                            {/* Total Fleet Card */}
+                            <div className="col-12 col-md-6 col-xl-3">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #11998e 0%, #38ef7d 100%)" }}>
+                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                            <div className="text-white">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                    <Truck size={20} />
+                                                    <small className="opacity-75">Total Fleet</small>
                                                 </div>
+                                                <h1 className="display-4 fw-bold mb-0">
+                                                    {(() => {
+                                                        if (!pivotData.armada || pivotData.armada.length === 0) return 0;
+                                                        const row = pivotData.armada[0];
+                                                        const armadaKeys = Object.keys(row).filter(
+                                                            (key) => key.toLowerCase() !== "relasi"
+                                                        );
+                                                        return armadaKeys.reduce((total, key) => {
+                                                            return total + (parseFloat(row[key]) || 0);
+                                                        }, 0);
+                                                    })()}
+                                                </h1>
+                                            </div>
+                                            <div className="p-3 bg-white bg-opacity-25 rounded-3">
+                                                <Zap size={24} className="text-white" />
                                             </div>
                                         </div>
-
-                                        {/* Total Fleet Card */}
-                                        <div className="col-12 col-md-4">
-                                            <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100 border-start border-success border-4">
-                                                <div className="card-body p-3 p-md-4">
-                                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                                        <div>
-                                                            <p className="text-muted small mb-1">
-                                                                Total Asset
-                                                            </p>
-                                                            <h3 className="fw-bold text-dark mb-0">
-                                                                {(() => {
-                                                                    const excluded =
-                                                                        [
-                                                                            "FACILITY_ID",
-                                                                            "NAME",
-                                                                            "TYPE",
-                                                                            "Relasi_Armada",
-                                                                            "zone",
-                                                                            "Is_Loading_Dock",
-                                                                            "Opening_Date",
-                                                                            "Area_Staging_P",
-                                                                            "Area_Staging_L",
-                                                                            "Area_Staging_T",
-                                                                            "Area_Loading_L",
-                                                                            "Area_Loading_P",
-                                                                            "Alamat",
-                                                                            "Demand_DO",
-                                                                            "Capacity_DO",
-                                                                            "Capacity_CBM",
-                                                                            "NIK_Leader",
-                                                                            "Telp",
-                                                                            "Background_Image",
-                                                                        ];
-                                                                    const armadaKeys =
-                                                                        Object.keys(
-                                                                            pivotData
-                                                                        ).filter(
-                                                                            (
-                                                                                key
-                                                                            ) => {
-                                                                                if (
-                                                                                    excluded.includes(
-                                                                                        key
-                                                                                    )
-                                                                                )
-                                                                                    return false;
-                                                                                const value =
-                                                                                    pivotData[
-                                                                                        key
-                                                                                    ];
-                                                                                return (
-                                                                                    !isNaN(
-                                                                                        parseFloat(
-                                                                                            value
-                                                                                        )
-                                                                                    ) &&
-                                                                                    isFinite(
-                                                                                        value
-                                                                                    )
-                                                                                );
-                                                                            }
-                                                                        );
-                                                                    return armadaKeys.reduce(
-                                                                        (
-                                                                            sum,
-                                                                            key
-                                                                        ) =>
-                                                                            sum +
-                                                                            (parseFloat(
-                                                                                pivotData[
-                                                                                    key
-                                                                                ]
-                                                                            ) ||
-                                                                                0),
-                                                                        0
-                                                                    );
-                                                                })()}
-                                                            </h3>
-                                                        </div>
-                                                        <div className="p-2 bg-success bg-opacity-10 rounded">
-                                                            <Truck
-                                                                className="text-success"
-                                                                size={20}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-muted small mb-0">
-                                                        Vehicles Asset
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-
-                                        {/* CBM Capacity Card */}
-                                        <div className="col-12 col-md-4">
-                                            <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100 border-start border-info border-4">
-                                                <div className="card-body p-3 p-md-4">
-                                                    <div className="d-flex justify-content-between align-items-start mb-3">
-                                                        <div>
-                                                            <p className="text-muted small mb-1">
-                                                                CBM Capacity
-                                                            </p>
-                                                            <h3 className="fw-bold text-dark mb-0">
-                                                                {
-                                                                    pivotData.Capacity_CBM
-                                                                }
-                                                            </h3>
-                                                        </div>
-                                                        <div className="p-2 bg-info bg-opacity-10 rounded">
-                                                            <Package
-                                                                className="text-info"
-                                                                size={20}
-                                                            />
-                                                        </div>
-                                                    </div>
-                                                    <p className="text-muted small mb-0">
-                                                        Cubic Meter
-                                                    </p>
-                                                </div>
-                                            </div>
+                                        <div className="mt-3 text-white small">
+                                            <strong>Active</strong> Vehicle Assets
                                         </div>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Charts Row */}
-                                <div className="col-12 col-lg-6">
-                                    <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100">
-                                        <div className="card-body p-3 p-md-4">
-                                            <h5 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                                                <BarChart3
-                                                    className="text-primary"
-                                                    size={20}
-                                                />
-                                                <span className="fs-6 fs-md-5">
-                                                    Demand vs Capacity
-                                                </span>
+                            {/* CBM Capacity Card */}
+                            <div className="col-12 col-md-6 col-xl-3">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #fb9393ff 0%, #f5576c 100%)" }}>
+                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                            <div className="text-white">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                    <Package size={20} />
+                                                    <small className="opacity-75">CBM Capacity</small>
+                                                </div>
+                                                <h1 className="display-4 fw-bold mb-0">
+                                                    {pivotData.Capacity_CBM}
+                                                </h1>
+                                            </div>
+                                            <div className="p-3 bg-white bg-opacity-25 rounded-3">
+                                                <Activity size={24} className="text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 text-white small">
+                                            <strong>Cubic Meter</strong> Storage
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Manpower Card */}
+                            <div className="col-12 col-md-6 col-xl-3">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4" style={{ background: "linear-gradient(135deg, #4facfe 0%, #00f2fe 100%)" }}>
+                                        <div className="d-flex justify-content-between align-items-start mb-3">
+                                            <div className="text-white">
+                                                <div className="d-flex align-items-center gap-2 mb-2">
+                                                    <Users size={20} />
+                                                    <small className="opacity-75">Total Manpower</small>
+                                                </div>
+                                                <h1 className="display-4 fw-bold mb-0">
+                                                    {(() => {
+                                                        const mppFields = ["Staff_Up", "Driver", "Asst_Driver", "WHM", "Security"];
+                                                        return mppFields.reduce((total, key) => {
+                                                            const val = pivotData[key];
+                                                            return total + (val ? parseFloat(val) : 0);
+                                                        }, 0);
+                                                    })()}
+                                                </h1>
+                                            </div>
+                                            <div className="p-3 bg-white bg-opacity-25 rounded-3">
+                                                <Shield size={24} className="text-white" />
+                                            </div>
+                                        </div>
+                                        <div className="mt-3 text-white small">
+                                            <strong>Active</strong> Personnel
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Charts Section */}
+                        <div className="row g-4">
+                            {/* Demand vs Capacity Chart */}
+                            <div className="col-12 col-lg-6">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4">
+                                        <div className="d-flex justify-content-between align-items-center mb-4">
+                                            <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                <BarChart3 className="text-primary" size={24} />
+                                                Demand vs Capacity Analysis
                                             </h5>
-                                            <ResponsiveContainer
-                                                width="100%"
-                                                height={250}
+                                            <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                                                DO Metrics
+                                            </span>
+                                        </div>
+                                        <ResponsiveContainer width="100%" height={280}>
+                                            <BarChart
+                                                data={[
+                                                    { name: "Demand", value: pivotData.Demand_DO, fill: "#62ebf5ff" },
+                                                    { name: "Capacity", value: pivotData.Capacity_DO, fill: "#32c6daff" },
+                                                ]}
                                             >
-                                                <BarChart
-                                                    data={[
-                                                        {
-                                                            name: "Demand",
-                                                            value: pivotData.Demand_DO,
-                                                            fill: "#0d6efd",
-                                                        },
-                                                        {
-                                                            name: "Capacity",
-                                                            value: pivotData.Capacity_DO,
-                                                            fill: "#6c757d",
-                                                        },
-                                                    ]}
-                                                >
-                                                    <CartesianGrid strokeDasharray="3 3" />
-                                                    <XAxis dataKey="name" />
-                                                    <YAxis />
-                                                    <Tooltip />
-                                                    <Bar
-                                                        dataKey="value"
-                                                        radius={[8, 8, 0, 0]}
-                                                    />
-                                                </BarChart>
-                                            </ResponsiveContainer>
-                                        </div>
+                                                <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                                                <XAxis dataKey="name" />
+                                                <YAxis />
+                                                <Tooltip />
+                                                <Bar dataKey="value" radius={[12, 12, 0, 0]} />
+                                            </BarChart>
+                                        </ResponsiveContainer>
                                     </div>
                                 </div>
+                            </div>
 
-                                {/* Fleet Distribution Pie Chart */}
-                                <div className="col-12 col-lg-6">
-                                    <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100">
-                                        <div className="card-body p-3 p-md-4">
-                                            <h5 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                                                <Truck
-                                                    className="text-primary"
-                                                    size={20}
-                                                />
-                                                <span className="fs-6 fs-md-5">
-                                                    Type Armada
-                                                </span>
+                            {/* Fleet Distribution */}
+                            <div className="col-12 col-lg-6">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4">
+                                        <div className="d-flex justify-content-between align-items-center mb-4">
+                                            <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                                                <Truck className="text-primary" size={24} />
+                                                Fleet Distribution
                                             </h5>
-                                            {(() => {
-                                                const excluded = [
-                                                    "FACILITY_ID",
-                                                    "NAME",
-                                                    "TYPE",
-                                                    "Relasi_Armada",
-                                                    "zone",
-                                                    "Is_Loading_Dock",
-                                                    "Opening_Date",
-                                                    "Area_Staging_P",
-                                                    "Area_Staging_L",
-                                                    "Area_Staging_T",
-                                                    "Area_Loading_L",
-                                                    "Area_Loading_P",
-                                                    "Alamat",
-                                                    "Demand_DO",
-                                                    "Capacity_DO",
-                                                    "Capacity_CBM",
-                                                    "NIK_Leader",
-                                                    "Telp",
-                                                    "Background_Image",
-                                                ];
-                                                const armadaKeys = Object.keys(
-                                                    pivotData
-                                                ).filter((key) => {
-                                                    if (excluded.includes(key))
-                                                        return false;
-                                                    const value =
-                                                        pivotData[key];
-                                                    return (
-                                                        !isNaN(
-                                                            parseFloat(value)
-                                                        ) &&
-                                                        isFinite(value) &&
-                                                        parseFloat(value) > 0
-                                                    );
-                                                });
-
-                                                const chartData =
-                                                    armadaKeys.map((key) => ({
-                                                        name: key,
-                                                        value:
-                                                            parseFloat(
-                                                                pivotData[key]
-                                                            ) || 0,
-                                                    }));
-
-                                                const COLORS = [
-                                                    "#0d6efd",
-                                                    "#198754",
-                                                    "#ffc107",
-                                                    "#dc3545",
-                                                    "#0dcaf0",
-                                                    "#6c757d",
-                                                    "#d63384",
-                                                    "#fd7e14",
-                                                ];
-
-                                                return chartData.length > 0 ? (
-                                                    <>
-                                                        <ResponsiveContainer
-                                                            width="100%"
-                                                            height={240}
-                                                        >
-                                                            <PieChart>
-                                                                <Pie
-                                                                    data={
-                                                                        chartData
-                                                                    }
-                                                                    cx="50%"
-                                                                    cy="50%"
-                                                                    innerRadius={
-                                                                        40
-                                                                    }
-                                                                    outerRadius={
-                                                                        80
-                                                                    }
-                                                                    fill="#8884d8"
-                                                                    dataKey="value"
-                                                                    labelLine={
-                                                                        true
-                                                                    } // garis informatif
-                                                                    label={({
-                                                                        name,
-                                                                        value,
-                                                                        percent,
-                                                                    }) =>
-                                                                        `${name} (${value})`
-                                                                    }
-                                                                >
-                                                                    {chartData.map(
-                                                                        (
-                                                                            entry,
-                                                                            index
-                                                                        ) => (
-                                                                            <Cell
-                                                                                key={`cell-${index}`}
-                                                                                fill={
-                                                                                    COLORS[
-                                                                                        index %
-                                                                                            COLORS.length
-                                                                                    ]
-                                                                                }
-                                                                            />
-                                                                        )
-                                                                    )}
-                                                                </Pie>
-                                                                <Tooltip />
-                                                            </PieChart>
-                                                        </ResponsiveContainer>
-
-                                                        <div className="row g-2 mt-2">
-                                                            {chartData.map(
-                                                                (item, idx) => (
-                                                                    <div
-                                                                        key={
-                                                                            idx
-                                                                        }
-                                                                        className="col-6"
-                                                                    >
-                                                                        <div className="d-flex align-items-center gap-2">
-                                                                            <div
-                                                                                style={{
-                                                                                    width: "12px",
-                                                                                    height: "12px",
-                                                                                    backgroundColor:
-                                                                                        COLORS[
-                                                                                            idx %
-                                                                                                COLORS.length
-                                                                                        ],
-                                                                                    borderRadius:
-                                                                                        "2px",
-                                                                                }}
-                                                                            ></div>
-                                                                            <small className="text-muted text-truncate">
-                                                                                {
-                                                                                    item.name
-                                                                                }
-                                                                            </small>
-                                                                        </div>
-                                                                    </div>
-                                                                )
-                                                            )}
-                                                        </div>
-                                                    </>
-                                                ) : (
+                                            <span className="badge bg-success bg-opacity-10 text-success px-3 py-2">
+                                                Asset Mix
+                                            </span>
+                                        </div>
+                                        {(() => {
+                                            if (!pivotData.armada || pivotData.armada.length === 0) {
+                                                return (
                                                     <div className="text-center py-4">
-                                                        <AlertCircle
-                                                            className="mx-auto mb-2 text-muted"
-                                                            size={40}
-                                                        />
-                                                        <p className="text-muted mb-0 small">
-                                                            No fleet data to
-                                                            display
-                                                        </p>
+                                                        <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
+                                                        <p className="text-muted mb-0">No fleet data available</p>
                                                     </div>
                                                 );
-                                            })()}
-                                        </div>
-                                    </div>
-                                </div>
+                                            }
 
-                                {/* Capacity & Demand */}
-                                <div className="col-12 col-lg-6">
-                                    <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100">
-                                        <div className="card-body p-3 p-md-4">
-                                            <h5 className="fw-bold text-dark mb-3 mb-md-4 d-flex align-items-center gap-2">
-                                                <Package
-                                                    className="text-primary"
-                                                    size={20}
-                                                />
-                                                <span className="fs-6 fs-md-5">
-                                                    Capacity & Demand
-                                                </span>
-                                            </h5>
-
-                                            <div className="vstack gap-2 gap-md-3">
-                                                <div className="d-flex justify-content-between align-items-center p-2 p-md-3 bg-light rounded">
-                                                    <span className="text-muted small">
-                                                        Demand DO
-                                                    </span>
-                                                    <span className="fw-bold text-dark">
-                                                        {pivotData.Demand_DO}
-                                                    </span>
-                                                </div>
-                                                <div className="d-flex justify-content-between align-items-center p-2 p-md-3 bg-light rounded">
-                                                    <span className="text-muted small">
-                                                        Capacity DO
-                                                    </span>
-                                                    <span className="fw-bold text-dark">
-                                                        {pivotData.Capacity_DO}
-                                                    </span>
-                                                </div>
-                                                <div className="d-flex justify-content-between align-items-center p-2 p-md-3 bg-light rounded">
-                                                    <span className="text-muted small">
-                                                        Capacity CBM
-                                                    </span>
-                                                    <span className="fw-bold text-dark">
-                                                        {pivotData.Capacity_CBM}
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                {/* Area Information */}
-                                <div className="col-12 col-lg-6">
-                                    <div className="card shadow-sm border-0 rounded-3 rounded-lg-4 h-100">
-                                        <div className="card-body p-3 p-md-4">
-                                            <h5 className="fw-bold text-dark mb-3 mb-md-4 d-flex align-items-center gap-2">
-                                                <Ruler
-                                                    className="text-primary"
-                                                    size={20}
-                                                />
-                                                <span className="fs-6 fs-md-5">
-                                                    Area Specifications
-                                                </span>
-                                            </h5>
-
-                                            <div className="vstack gap-2 gap-md-3">
-                                                <div className="p-2 p-md-3 bg-light rounded">
-                                                    <p className="text-muted small mb-1 mb-md-2">
-                                                        Area Staging (P × L × T)
-                                                    </p>
-                                                    <p className="fw-bold text-dark mb-0 small">
-                                                        {
-                                                            pivotData.Area_Staging_P
-                                                        }{" "}
-                                                        ×{" "}
-                                                        {
-                                                            pivotData.Area_Staging_L
-                                                        }{" "}
-                                                        ×{" "}
-                                                        {
-                                                            pivotData.Area_Staging_T
-                                                        }
-                                                    </p>
-                                                </div>
-                                                <div className="p-2 p-md-3 bg-light rounded">
-                                                    <p className="text-muted small mb-1 mb-md-2">
-                                                        Area Loading (L × P)
-                                                    </p>
-                                                    <p className="fw-bold text-dark mb-0 small">
-                                                        {
-                                                            pivotData.Area_Loading_L
-                                                        }{" "}
-                                                        ×{" "}
-                                                        {
-                                                            pivotData.Area_Loading_P
-                                                        }
-                                                    </p>
-                                                </div>
-                                                <div className="p-2 p-md-3 bg-light rounded">
-                                                    <p className="text-muted small mb-1 mb-md-2">
-                                                        Leader NIK
-                                                    </p>
-                                                    <p className="fw-bold text-dark mb-0 small">
-                                                        {pivotData.NIK_Leader}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Location Map */}
-                            <div className="card shadow-sm border-0 rounded-3 rounded-lg-4">
-                                <div className="card-body p-3 p-md-4">
-                                    <h5 className="fw-bold text-dark mb-3 d-flex align-items-center gap-2">
-                                        <MapPin
-                                            className="text-primary"
-                                            size={20}
-                                        />
-                                        <span className="fs-6 fs-md-5">
-                                            Location Map
-                                        </span>
-                                    </h5>
-
-                                    {pivotData?.Alamat ? (
-                                        <div
-                                            className="rounded overflow-hidden"
-                                            style={{ height: "300px" }}
-                                        >
-                                            <iframe
-                                                width="100%"
-                                                height="100%"
-                                                style={{ border: 0 }}
-                                                loading="lazy"
-                                                allowFullScreen
-                                                referrerPolicy="no-referrer-when-downgrade"
-                                                src={`https://www.google.com/maps?q=${encodeURIComponent(
-                                                    pivotData.Alamat
-                                                )}&output=embed`}
-                                            ></iframe>
-                                        </div>
-                                    ) : (
-                                        <p className="text-muted small">
-                                            No address available
-                                        </p>
-                                    )}
-                                </div>
-                            </div>
-                            {/* Fleet Availability */}
-                            <div className="card shadow-sm border-0 rounded-3 rounded-lg-4">
-                                <div className="card-body p-3 p-md-4">
-                                    <h5 className="fw-bold text-dark mb-3 mb-md-4 d-flex align-items-center gap-2">
-                                        <Truck
-                                            className="text-primary"
-                                            size={20}
-                                        />
-                                        <span className="fs-6 fs-md-5">
-                                            Asset Armada
-                                        </span>
-                                    </h5>
-
-                                    {(() => {
-                                        const excluded = [
-                                            "FACILITY_ID",
-                                            "NAME",
-                                            "TYPE",
-                                            "Relasi_Armada",
-                                            "zone",
-                                            "Is_Loading_Dock",
-                                            "Opening_Date",
-                                            "Area_Staging_P",
-                                            "Area_Staging_L",
-                                            "Area_Staging_T",
-                                            "Area_Loading_L",
-                                            "Area_Loading_P",
-                                            "Alamat",
-                                            "Demand_DO",
-                                            "Capacity_DO",
-                                            "Capacity_CBM",
-                                            "NIK_Leader",
-                                            "Telp",
-                                            "Background_Image",
-                                        ];
-
-                                        const armadaKeys = Object.keys(
-                                            pivotData
-                                        ).filter((key) => {
-                                            if (excluded.includes(key))
-                                                return false;
-                                            const value = pivotData[key];
-                                            return (
-                                                !isNaN(parseFloat(value)) &&
-                                                isFinite(value)
+                                            const row = pivotData.armada[0];
+                                            const armadaKeys = Object.keys(row).filter(
+                                                (key) => key.toLowerCase() !== "relasi" && parseFloat(row[key]) > 0
                                             );
-                                        });
+                                            const chartData = armadaKeys.map((key) => ({
+                                                name: key,
+                                                value: parseFloat(row[key]) || 0,
+                                            }));
 
-                                        return armadaKeys.length > 0 ? (
-                                            <div className="row g-2 g-md-3">
-                                                {armadaKeys.map((key, i) => (
-                                                    <div
-                                                        key={i}
-                                                        className="col-12 col-sm-6 col-lg-4"
-                                                    >
-                                                        <div className="d-flex justify-content-between align-items-center p-2 p-md-3 bg-light rounded border-start border-primary border-3 border-md-4">
-                                                            <span className="fw-medium text-dark small text-truncate pe-2">
-                                                                {key}
-                                                            </span>
-                                                            <span className="fs-6 fs-md-5 fw-bold text-primary flex-shrink-0">
-                                                                {pivotData[
-                                                                    key
-                                                                ] ?? 0}
-                                                            </span>
-                                                        </div>
+                                            const COLORS = ["#0a259eff", "#139acfff", "#9593fbff", "#f5576c", "#4facfe", "#00f2fe", "#11998e", "#38ef7d"];
+
+                                            return chartData.length > 0 ? (
+                                                <>
+                                                    <ResponsiveContainer width="100%" height={220}>
+                                                        <PieChart>
+                                                            <Pie
+                                                                data={chartData}
+                                                                cx="50%"
+                                                                cy="50%"
+                                                                innerRadius={50}
+                                                                outerRadius={90}
+                                                                dataKey="value"
+                                                                label={({ name, value }) => `${name}: ${value}`}
+                                                            >
+                                                                {chartData.map((entry, index) => (
+                                                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                                                ))}
+                                                            </Pie>
+                                                            <Tooltip />
+                                                        </PieChart>
+                                                    </ResponsiveContainer>
+                                                    <div className="row g-2 mt-2">
+                                                        {chartData.map((item, idx) => (
+                                                            <div key={idx} className="col-6">
+                                                                <div className="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                                                                    <div
+                                                                        style={{
+                                                                            width: "16px",
+                                                                            height: "16px",
+                                                                            backgroundColor: COLORS[idx % COLORS.length],
+                                                                            borderRadius: "4px",
+                                                                        }}
+                                                                    ></div>
+                                                                    <small className="text-truncate fw-medium">{item.name}</small>
+                                                                </div>
+                                                            </div>
+                                                        ))}
                                                     </div>
-                                                ))}
-                                            </div>
-                                        ) : (
-                                            <div className="text-center py-4">
-                                                <Truck
-                                                    className="mx-auto mb-3 text-muted"
-                                                    size={40}
-                                                />
-                                                <p className="text-muted mb-0 small">
-                                                    No fleet data available
-                                                </p>
-                                            </div>
-                                        );
-                                    })()}
+                                                </>
+                                            ) : (
+                                                <div className="text-center py-4">
+                                                    <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
+                                                    <p className="text-muted mb-0">No fleet data to display</p>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    )}
-                </div>
+
+                        {/* Operational Details */}
+                        <div className="row g-4">
+                            {/* Capacity Details */}
+                            <div className="col-12 col-lg-4">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4">
+                                        <h5 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                                            <Package className="text-primary" size={24} />
+                                            Capacity Overview
+                                        </h5>
+                                        <div className="vstack gap-3">
+                                            <div className="p-3 rounded-3" style={{ background: "linear-gradient(135deg, #667eea15 0%, #764ba215 100%)" }}>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <span className="text-muted">Demand DO</span>
+                                                    <span className="fw-bold fs-4 text-primary">{pivotData.Demand_DO}</span>
+                                                </div>
+                                            </div>
+                                            <div className="p-3 rounded-3" style={{ background: "linear-gradient(135deg, #11998e15 0%, #38ef7d15 100%)" }}>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <span className="text-muted">Capacity DO</span>
+                                                    <span className="fw-bold fs-4 text-success">{pivotData.Capacity_DO}</span>
+                                                </div>
+                                            </div>
+                                            <div className="p-3 rounded-3" style={{ background: "linear-gradient(135deg, #f093fb15 0%, #f5576c15 100%)" }}>
+                                                <div className="d-flex justify-content-between align-items-center">
+                                                    <span className="text-muted">Capacity CBM</span>
+                                                    <span className="fw-bold fs-4 text-danger">{pivotData.Capacity_CBM}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Area Specifications */}
+                            <div className="col-12 col-lg-4">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4">
+                                        <h5 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                                            <Ruler className="text-primary" size={24} />
+                                            Area Specifications
+                                        </h5>
+                                        <div className="vstack gap-3">
+                                            <div className="p-3 bg-light rounded-3">
+                                                <p className="text-muted small mb-2">Area Staging (P × L × T)</p>
+                                                <p className="fw-bold text-dark mb-0 fs-5">
+                                                    {pivotData.Area_Staging_P} × {pivotData.Area_Staging_L} × {pivotData.Area_Staging_T}
+                                                </p>
+                                            </div>
+                                            <div className="p-3 bg-light rounded-3">
+                                                <p className="text-muted small mb-2">Area Loading (L × P)</p>
+                                                <p className="fw-bold text-dark mb-0 fs-5">
+                                                    {pivotData.Area_Loading_L} × {pivotData.Area_Loading_P}
+                                                </p>
+                                            </div>
+                                            <div className="p-3 bg-light rounded-3">
+                                                <p className="text-muted small mb-2">Leader NIK</p>
+                                                <p className="fw-bold text-dark mb-0 fs-5">{pivotData.NIK_Leader}</p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Manpower Distribution */}
+                            <div className="col-12 col-lg-4">
+                                <div className="card shadow-lg border-0 rounded-4 h-100">
+                                    <div className="card-body p-4">
+                                        <h5 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                                            <Users className="text-primary" size={24} />
+                                            Manpower Distribution
+                                        </h5>
+                                        {(() => {
+                                            const mppFields = [
+                                                { label: "Staff UP", key: "Staff_Up", color: "#1c96b4ff" },
+                                                { label: "Driver", key: "Driver", color: "#11998e" },
+                                                { label: "Assistant Driver", key: "Asst_Driver", color: "#24a1a5ff" },
+                                                { label: "WHM", key: "WHM", color: "#4b4d4eff" },
+                                                { label: "Security", key: "Security", color: "#3d4142ff" },
+                                            ];
+
+                                            const availableData = mppFields.filter((f) => {
+                                                const v = pivotData[f.key];
+                                                return v !== null && v !== undefined && parseFloat(v) > 0;
+                                            });
+
+                                            return availableData.length > 0 ? (
+                                                <div className="vstack gap-2">
+                                                    {availableData.map((item, i) => (
+                                                        <div key={i} className="d-flex justify-content-between align-items-center p-3 rounded-3 border-start border-4" style={{ borderColor: item.color, background: `${item.color}10` }}>
+                                                            <span className="fw-medium text-dark">{item.label}</span>
+                                                            <span className="fs-4 fw-bold" style={{ color: item.color }}>
+                                                                {pivotData[item.key]}
+                                                            </span>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            ) : (
+                                                <div className="text-center py-4">
+                                                    <Users className="mx-auto mb-3 text-muted" size={48} />
+                                                    <p className="text-muted mb-0">No manpower data available</p>
+                                                </div>
+                                            );
+                                        })()}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Location Map */}
+                        <div className="card shadow-lg border-0 rounded-4">
+                            <div className="card-body p-4">
+                                <h5 className="fw-bold text-dark mb-4 d-flex align-items-center gap-2">
+                                    <MapPin className="text-primary" size={24} />
+                                    Facility Location
+                                </h5>
+                                {pivotData?.Alamat ? (
+                                    <div className="rounded-3 overflow-hidden shadow" style={{ height: "400px" }}>
+                                        <iframe
+                                            width="100%"
+                                            height="100%"
+                                            style={{ border: 0 }}
+                                            loading="lazy"
+                                            allowFullScreen
+                                            referrerPolicy="no-referrer-when-downgrade"
+                                            src={`https://www.google.com/maps?q=${encodeURIComponent(pivotData.Alamat)}&output=embed`}
+                                        ></iframe>
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-5">
+                                        <MapPin className="mx-auto mb-3 text-muted" size={48} />
+                                        <p className="text-muted mb-0">No address available</p>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Additional Info Footer */}
+                        <div className="card shadow-lg border-0 rounded-4" style={{ background: "linear-gradient(135deg, #12b2b8ff 0%, #42daf5ff 100%)" }}>
+                            <div className="card-body p-4">
+                                <div className="row text-white">
+                                    <div className="col-md-6 mb-3 mb-md-0">
+                                        <h6 className="fw-bold mb-3 opacity-75 text-dark">Facility Information</h6>
+                                        <div className="vstack gap-2 small text-dark ">
+                                            <div className="d-flex align-items-center gap-2 ">
+                                                <Truck size={16} />
+                                                <span>Loading Dock: <strong>{pivotData.Is_Loading_Dock}</strong></span>
+                                            </div>
+                                            <div className="d-flex align-items-center gap-2">
+                                                <Building2 size={16} />
+                                                <span>Type: <strong>{pivotData.TYPE}</strong></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div className="col-md-6">
+                                        <h6 className="fw-bold mb-3 opacity-75 text-dark">Performance Summary</h6>
+                                        <div className="vstack gap-2 small text-dark">
+                                            <div className="d-flex justify-content-between">
+                                                <span>Utilization Rate:</span>
+                                                <strong>{utilizationRate}%</strong>
+                                            </div>
+                                            <div className="d-flex justify-content-between">
+                                                <span>Active Assets:</span>
+                                                <strong>
+                                                    {(() => {
+                                                        if (!pivotData.armada || pivotData.armada.length === 0) return 0;
+                                                        const row = pivotData.armada[0];
+                                                        const armadaKeys = Object.keys(row).filter(
+                                                            (key) => key.toLowerCase() !== "relasi"
+                                                        );
+                                                        return armadaKeys.reduce((total, key) => {
+                                                            return total + (parseFloat(row[key]) || 0);
+                                                        }, 0);
+                                                    })()}
+                                                </strong>
+                                            </div>
+                                            <div className="d-flex justify-content-between">
+                                                <span>Total Personnel:</span>
+                                                <strong>
+                                                    {(() => {
+                                                        const mppFields = ["Staff_Up", "Driver", "Asst_Driver", "WHM", "Security"];
+                                                        return mppFields.reduce((total, key) => {
+                                                            const val = pivotData[key];
+                                                            return total + (val ? parseFloat(val) : 0);
+                                                        }, 0);
+                                                    })()}
+                                                </strong>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div>
-        </>
+        </div>
     );
 };
 
