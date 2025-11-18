@@ -43,6 +43,41 @@ const CompanyProfile = () => {
     const [showDetailJalur, setShowDetailJalur] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
+    // Normalisasi otomatis area ke: Dalam Kota / Luar Kota
+const normalizeAreaType = (areaName: string) => {
+    if (!areaName) return "Luar Kota";
+
+    const text = String(areaName).toLowerCase();
+
+    const keywordsDalamKota = [
+        "jakarta",
+        "jkt",
+        "grogol",
+        "menteng",
+        "kemayoran",
+        "priuk",
+        "koja",
+        "kelapa gading",
+        "cempaka",
+        "pluit",
+        "cilincing",
+        "sunter",
+        "matraman",
+        "cawang",
+        "pasar",
+        "ragunan"
+    ];
+
+    // Jika salah satu keyword ditemukan → Dalam Kota
+    if (keywordsDalamKota.some(k => text.includes(k))) {
+        return "Dalam Kota";
+    }
+
+    // Default → Luar Kota
+    return "Luar Kota";
+};
+
+
 
     useEffect(() => {
         const loadFacilities = async () => {
@@ -463,6 +498,9 @@ const prepareJalurChartData = () => {
 
                 <div className="d-flex justify-content-between align-items-center mb-4">
                     <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        
+                        <MapPin className="text-primary" size={24} />
+                        Coverage Delivery
                         <span
                             className="badge bg-info bg-opacity-10 text-info px-3 py-2"
                             style={{ cursor: "pointer" }}
@@ -470,8 +508,6 @@ const prepareJalurChartData = () => {
                         >
                             Show Details
                         </span>
-                        <MapPin className="text-primary" size={24} />
-                        Coverage Delivery
                     </h5>
                 </div>
 
@@ -482,7 +518,7 @@ const prepareJalurChartData = () => {
 
                     const grouped: Record<string, string[]> = {};
                     jalurData.forEach((item: any) => {
-                        const area = item.area || "Unknown Area";
+                        const area = normalizeAreaType(item.area);
                         const jalur = item.jalur || "Unknown Jalur";
                         if (!grouped[area]) grouped[area] = [];
                         if (!grouped[area].includes(jalur)) grouped[area].push(jalur);
