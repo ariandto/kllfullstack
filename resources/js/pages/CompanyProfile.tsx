@@ -410,232 +410,149 @@ const prepareJalurChartData = () => {
                             </div>
                         </div>
                         
+{/* Charts Section */}
+<div className="row g-4">
 
-                        {/* Charts Section */}
-                        <div className="row g-4">
-                            {/* Demand vs Capacity Chart */}
-                            <div className="col-12 col-lg-6">
-                                <div className="card shadow-lg border-0 rounded-4 h-100">
-                                    <div className="card-body p-4">
-                                        <div className="d-flex justify-content-between align-items-center mb-4">
-                                            <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                                                <BarChart3 className="text-primary" size={24} />
-                                                Demand vs Capacity Analysis
-                                            </h5>
-                                            <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
-                                                DO Metrics
-                                            </span>
-                                        </div>
-                                        <ResponsiveContainer width="100%" height={280}>
-    <BarChart
-        data={[
-            { name: "Demand", value: pivotData.Demand_DO, fill: "#62ebf5ff" },
-            { name: "Capacity", value: pivotData.Capacity_DO, fill: "#32c6daff" },
-        ]}
-        margin={{ top: 30 }} // ruang ekstra agar label tidak ketutup
-    >
-        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-        <XAxis dataKey="name" />
-        <YAxis />
+    {/* Demand vs Capacity Chart */}
+    <div className="col-12 col-lg-4">
+        <div className="card shadow-lg border-0 rounded-4 h-100">
+            <div className="card-body p-4">
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <BarChart3 className="text-primary" size={24} />
+                        Demand vs Capacity Analysis
+                    </h5>
+                    <span className="badge bg-primary bg-opacity-10 text-primary px-3 py-2">
+                        DO Metrics
+                    </span>
+                </div>
 
-        {/* Tooltip tetap ada */}
-        <Tooltip />
+                <ResponsiveContainer width="100%" height={280}>
+                    <BarChart
+                        data={[
+                            { name: "Demand", value: pivotData.Demand_DO, fill: "#62ebf5ff" },
+                            { name: "Capacity", value: pivotData.Capacity_DO, fill: "#32c6daff" }
+                        ]}
+                        margin={{ top: 30 }}
+                    >
+                        <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
+                        <XAxis dataKey="name" />
+                        <YAxis />
+                        <Tooltip />
 
-        <Bar 
-            dataKey="value" 
-            radius={[12, 12, 0, 0]}
-            label={{
-                position: "top",
-                fill: "#000",
-                fontSize: 14,
-                fontWeight: 600,
-                formatter: (value) => `${value}`, // bisa diganti ribuan, format, dll
-            }}
-        />
-    </BarChart>
-</ResponsiveContainer>
-
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Fleet Distribution */}
-                            <div className="col-12 col-lg-6">
-                                <div className="card shadow-lg border-0 rounded-4 h-100">
-                                    <div className="card-body p-4">
-                                        <div className="d-flex justify-content-between align-items-center mb-4">
-                                            <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-                                                <Truck className="text-primary" size={24} />
-                                                Fleet Avaibility
-                                            </h5>
-                                            <span className="badge bg-success bg-opacity-10 text-success px-3 py-2">
-                                                Armada
-                                            </span>
-                                        </div>
-                                        {(() => {
-                                            if (!pivotData.armada || pivotData.armada.length === 0) {
-                                                return (
-                                                    <div className="text-center py-4">
-                                                        <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
-                                                        <p className="text-muted mb-0">No armada data available</p>
-                                                    </div>
-                                                );
-                                            }
-
-                                            const row = pivotData.armada[0];
-                                            const armadaKeys = Object.keys(row).filter(
-                                                (key) => key.toLowerCase() !== "relasi" && parseFloat(row[key]) > 0
-                                            );
-                                            const chartData = armadaKeys.map((key) => ({
-                                                name: key,
-                                                value: parseFloat(row[key]) || 0,
-                                            }));
-
-                                            const COLORS = ["#1034d8ff", "#139acfff", "#9593fbff", "#f5576c", "#4facfe", "#00f2fe", "#11998e", "#38ef7d"];
-
-                                            return chartData.length > 0 ? (
-                                                <>
-                                                    <ResponsiveContainer width="100%" height={220}>
-                                                        <PieChart>
-                                                            <Pie
-                                                                data={chartData}
-                                                                cx="50%"
-                                                                cy="50%"
-                                                                innerRadius={50}
-                                                                outerRadius={90}
-                                                                dataKey="value"
-                                                                label={({ name, value }) => `${name}: ${value}`}
-                                                            >
-                                                                {chartData.map((entry, index) => (
-                                                                    <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                                                                ))}
-                                                            </Pie>
-                                                            <Tooltip />
-                                                        </PieChart>
-                                                    </ResponsiveContainer>
-                                                    <div className="row g-2 mt-2">
-                                                        {chartData.map((item, idx) => (
-                                                            <div key={idx} className="col-6">
-                                                                <div className="d-flex align-items-center gap-2 p-2 bg-light rounded">
-                                                                    <div
-                                                                        style={{
-                                                                            width: "16px",
-                                                                            height: "16px",
-                                                                            backgroundColor: COLORS[idx % COLORS.length],
-                                                                            borderRadius: "4px",
-                                                                        }}
-                                                                    ></div>
-                                                                    <small className="text-truncate fw-medium">{item.name}</small>
-                                                                </div>
-                                                                
-                                                            </div>
-                                                        ))}
-                                                    </div>
-                                                </>
-                                            ) : (
-                                                <div className="text-center py-4">
-                                                    <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
-                                                    <p className="text-muted mb-0">No fleet data to display</p>
-                                                </div>
-                                                
-                                            );
-                                        })()}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                       {/* INFOGRAPHIC: Coverage Area & Jalur */}
-<div className="card shadow-lg border-0 rounded-4">
-  <div className="card-body p-4">
-
-    <div className="d-flex justify-content-between align-items-center mb-4">
-      <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
-        <span
-  className="badge bg-info bg-opacity-10 text-info px-3 py-2"
-  style={{ cursor: "pointer" }}
-  onClick={() => setShowDetailModal(true)}
->
-  Show Details
-</span>
-        <MapPin className="text-primary" size={24} />
-        Coverage Area
-      </h5>
-
+                        <Bar
+                            dataKey="value"
+                            radius={[12, 12, 0, 0]}
+                            label={{
+                                position: "top",
+                                fill: "#000",
+                                fontSize: 14,
+                                fontWeight: 600
+                            }}
+                        />
+                    </BarChart>
+                </ResponsiveContainer>
+            </div>
+        </div>
     </div>
 
-    {/* Summary + Donut Chart */}
-    {(() => {
+    {/* Coverage Area & Jalur */}
+    <div className="col-12 col-lg-4">
+        <div className="card shadow-lg border-0 rounded-4 h-100">
+            <div className="card-body p-4">
 
-      if (jalurData.length === 0) return (
-        <p className="text-muted">No jalur data available</p>
-      );
-
-      const grouped: Record<string, string[]> = {};
-      jalurData.forEach(item => {
-        const area = item.area || "Unknown Area";
-        const jalur = item.jalur || "Unknown Jalur";
-        if (!grouped[area]) grouped[area] = [];
-        if (!grouped[area].includes(jalur)) grouped[area].push(jalur);
-      });
-
-      const areas = Object.keys(grouped);
-      const donutData = areas.map(area => ({
-        name: area,
-        value: grouped[area].length,
-      }));
-
-      const COLORS = ["#1034d8", "#139acf", "#4facfe", "#00f2fe", "#38ef7d", "#fb9393", "#f5576c"];
-
-      return (
-
-        <div className="row g-4">
-
-          {/* LEFT SIDE */}
-          <div className="col-12 col-lg-5">
-
-            <div className="p-3 rounded-4 shadow-sm mb-4"
-              style={{ background: "linear-gradient(135deg,#4facfe15,#00f2fe15)" }}>
-              <h6 className="fw-bold text-dark mb-3">Summary</h6>
-
-              <div className="row text-center">
-                <div className="col-6">
-                  <h2 className="fw-bold text-primary mb-0">{areas.length}</h2>
-                  <small className="text-muted">Total Area</small>
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <span
+                            className="badge bg-info bg-opacity-10 text-info px-3 py-2"
+                            style={{ cursor: "pointer" }}
+                            onClick={() => setShowDetailModal(true)}
+                        >
+                            Show Details
+                        </span>
+                        <MapPin className="text-primary" size={24} />
+                        Coverage Delivery
+                    </h5>
                 </div>
-                <div className="col-6">
-                  <h2 className="fw-bold text-info mb-0">{new Set(jalurData.map(j => j.jalur)).size}</h2>
-                  <small className="text-muted">Total City</small>
-                </div>
-              </div>
-            </div>
 
-            {/* Donut Chart */}
-            <div className="card border-0 shadow-sm rounded-4">
-              <div className="card-body">
-                <h6 className="fw-bold text-dark mb-3">Area Cover</h6>
+                {/* Summary + Donut */}
+                {(() => {
+                    if (jalurData.length === 0)
+                        return <p className="text-muted">No jalur data available</p>;
 
-                <ResponsiveContainer width="100%" height={250}>
-                  <PieChart>
-                    <Pie
-                      data={donutData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={60}
-                      outerRadius={85}
-                      dataKey="value"
-                      label={({ name, value }) => `${name} (${value})`}
-                    >
-                      {donutData.map((entry, index) => (
-                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip />
-                  </PieChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-                {/* DETAIL MODAL */}
+                    const grouped: Record<string, string[]> = {};
+                    jalurData.forEach((item: any) => {
+                        const area = item.area || "Unknown Area";
+                        const jalur = item.jalur || "Unknown Jalur";
+                        if (!grouped[area]) grouped[area] = [];
+                        if (!grouped[area].includes(jalur)) grouped[area].push(jalur);
+                    });
+
+                    const areas = Object.keys(grouped);
+                    const donutData = areas.map(a => ({
+                        name: a,
+                        value: grouped[a].length,
+                    }));
+
+                    const COLORS = [
+                        "#1034d8", "#139acf", "#4facfe", "#00f2fe",
+                        "#38ef7d", "#fb9393", "#f5576c"
+                    ];
+
+                    return (
+                        <div className="row g-4">
+
+                            {/* LEFT */}
+                            <div className="col-12">
+                                <div className="p-3 rounded-4 shadow-sm mb-4"
+                                    style={{ background: "linear-gradient(135deg,#4facfe15,#00f2fe15)" }}>
+                                    <h6 className="fw-bold text-dark mb-3">Summary</h6>
+
+                                    <div className="row text-center">
+                                        <div className="col-6">
+                                            <h2 className="fw-bold text-primary mb-0">{areas.length}</h2>
+                                            <small className="text-muted">Total Area</small>
+                                        </div>
+                                        <div className="col-6">
+                                            <h2 className="fw-bold text-info mb-0">
+                                                {new Set(jalurData.map(j => j.jalur)).size}
+                                            </h2>
+                                            <small className="text-muted">Total City</small>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Donut */}
+                                <div className="card border-0 shadow-sm rounded-4">
+                                    <div className="card-body">
+                                        <h6 className="fw-bold text-dark mb-3">Area Cover</h6>
+
+                                        <ResponsiveContainer width="100%" height={250}>
+                                            <PieChart>
+                                                <Pie
+                                                    data={donutData}
+                                                    cx="50%"
+                                                    cy="50%"
+                                                    innerRadius={60}
+                                                    outerRadius={85}
+                                                    dataKey="value"
+                                                    label={({ name, value }) =>
+                                                        `${name} (${value})`
+                                                    }
+                                                >
+                                                    {donutData.map((entry, index) => (
+                                                        <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                                    ))}
+                                                </Pie>
+                                                <Tooltip />
+                                            </PieChart>
+                                        </ResponsiveContainer>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* modal */}
+                            {/* DETAIL MODAL */}
 {showDetailModal && (
   <div
     className="modal fade show"
@@ -720,15 +637,105 @@ const prepareJalurChartData = () => {
   </div>
 )}
 
-          </div>
 
+                        </div>
+                    );
+                })()}
+            </div>
         </div>
-      );
-    })()}
-  </div>
+    </div>
+
+    {/* Fleet Distribution */}
+    <div className="col-12 col-lg-4">
+        <div className="card shadow-lg border-0 rounded-4 h-100">
+            <div className="card-body p-4">
+
+                <div className="d-flex justify-content-between align-items-center mb-4">
+                    <h5 className="fw-bold text-dark mb-0 d-flex align-items-center gap-2">
+                        <Truck className="text-primary" size={24} />
+                        Fleet Availability
+                    </h5>
+                    <span className="badge bg-success bg-opacity-10 text-success px-3 py-2">
+                        Armada
+                    </span>
+                </div>
+
+                {(() => {
+                    if (!pivotData.armada || pivotData.armada.length === 0) {
+                        return (
+                            <div className="text-center py-4">
+                                <AlertCircle className="mx-auto mb-3 text-muted" size={48} />
+                                <p className="text-muted mb-0">No armada data available</p>
+                            </div>
+                        );
+                    }
+
+                    const row = pivotData.armada[0];
+                    const keys = Object.keys(row).filter(
+                        key => key.toLowerCase() !== "relasi" && parseFloat(row[key]) > 0
+                    );
+
+                    const chartData = keys.map(k => ({
+                        name: k,
+                        value: parseFloat(row[k]) || 0
+                    }));
+
+                    const COLORS = [
+                        "#1034d8ff", "#139acfff", "#9593fbff", "#f5576c",
+                        "#4facfe", "#00f2fe", "#11998e", "#38ef7d"
+                    ];
+
+                    return (
+                        <>
+                            <ResponsiveContainer width="100%" height={220}>
+                                <PieChart>
+                                    <Pie
+                                        data={chartData}
+                                        cx="50%"
+                                        cy="50%"
+                                        innerRadius={50}
+                                        outerRadius={90}
+                                        dataKey="value"
+                                        label={({ name, value }) => `${name}: ${value}`}
+                                    >
+                                        {chartData.map((entry, index) => (
+                                            <Cell key={index} fill={COLORS[index % COLORS.length]} />
+                                        ))}
+                                    </Pie>
+                                    <Tooltip />
+                                </PieChart>
+                            </ResponsiveContainer>
+
+                            <div className="row g-2 mt-2">
+                                {chartData.map((item, idx) => (
+                                    <div key={idx} className="col-6">
+                                        <div className="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                                            <div
+                                                style={{
+                                                    width: "16px",
+                                                    height: "16px",
+                                                    backgroundColor: COLORS[idx % COLORS.length],
+                                                    borderRadius: "4px"
+                                                }}
+                                            ></div>
+                                            <small className="text-truncate fw-medium">
+                                                {item.name}
+                                            </small>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        </>
+                    );
+                })()}
+            </div>
+        </div>
+    </div>
+
 </div>
 
                         
+
                         {/* Operational Details */}
                         <div className="row g-4">
                             {/* Capacity Details */}
