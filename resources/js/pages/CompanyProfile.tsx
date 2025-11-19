@@ -1296,11 +1296,20 @@ if (demand > capacity) {
                                             </div>
                                             <div className="p-3 bg-light rounded-3">
                                                 <p className="text-muted small mb-2">
-                                                    Area Loading (L × P)
+                                                    Area Loading (P × L)
                                                 </p>
                                                 <p className="fw-bold text-dark mb-0 fs-5">
-                                                    {pivotData.Area_Loading_L} ×{" "}
-                                                    {pivotData.Area_Loading_P}
+                                                    {pivotData.Area_Loading_P} ×{" "}
+                                                    {pivotData.Area_Loading_L}
+                                                </p>
+                                            </div>
+
+                                            <div className="p-3 bg-light rounded-3">
+                                                <p className="text-muted small mb-2">
+                                                    Loading Dock 
+                                                </p>
+                                                <p className="fw-bold text-dark mb-0 fs-5">
+                                                    {pivotData.Is_Loading_Dock}
                                                 </p>
                                             </div>
                                             <div className="p-3 bg-light rounded-3">
