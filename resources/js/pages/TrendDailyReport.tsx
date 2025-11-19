@@ -11,6 +11,7 @@ import {
 import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./TrendDailyReport.css";
+import API_URL from "../config/api";
 
 
 interface Site { Facility: string; }
@@ -27,9 +28,6 @@ const TrendDailyReport: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  const API_URL = "https://scmlogisticapps.klgsys.com";
-
-   // const API_URL = "http://localhost:8000";
 
   useEffect(() => {
     axios

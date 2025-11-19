@@ -518,7 +518,7 @@ const prepareJalurChartData = () => {
 
                     const grouped: Record<string, string[]> = {};
                     jalurData.forEach((item: any) => {
-                        const area = normalizeAreaType(item.area);
+                        const area = item.area || "Unknown Area";
                         const jalur = item.jalur || "Unknown Jalur";
                         if (!grouped[area]) grouped[area] = [];
                         if (!grouped[area].includes(jalur)) grouped[area].push(jalur);
