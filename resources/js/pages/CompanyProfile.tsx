@@ -38,8 +38,6 @@ const CompanyProfile = () => {
     const [loadingFacility, setLoadingFacility] = useState<boolean>(true);
     const [loadingPivot, setLoadingPivot] = useState<boolean>(false);
     const [jalurData, setJalurData] = useState<any[]>([]);
-    const totalCoverageJalur = new Set(jalurData.map((j) => j.jalur)).size;
-    const [showDetailJalur, setShowDetailJalur] = useState(false);
     const [showDetailModal, setShowDetailModal] = useState(false);
 
     // Normalisasi otomatis area ke: Dalam Kota / Luar Kota
