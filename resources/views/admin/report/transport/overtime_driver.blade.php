@@ -65,8 +65,8 @@
   .table td, .table th { vertical-align: middle; }
 </style>
 
-<div class="page-content">
-  <div class="container-fluid">
+<div class="content mb-5">
+  <div class="container-fluid mt-5 mb-5">
 
     <!-- Page Header -->
     <div class="row mb-4">

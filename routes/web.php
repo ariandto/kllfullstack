@@ -671,32 +671,7 @@ Route::middleware('admin')->group(function () {
 });
 
 
-// Route::middleware('admin')->group(function () {
 
-//     // 🔹 1. Halaman utama React Report
-//     // Menampilkan view Blade yang berisi React (resources/views/admin/react_page.blade.php)
-//     Route::get('/admin/transport/report', function () {
-//         return view('admin.react_page');
-//     })->name('admin.transport.report');
-
-//     // 🔹 2. API endpoint (dipanggil dari React via axios)
-//     Route::controller(TrendDailyReportController::class)->group(function () {
-
-//         // ✅ Ambil daftar site (dropdown)
-//         Route::get('/admin/transport/get-site-list', 'getSites')
-//             ->name('admin.transport.getSiteList');
-
-//         // ✅ Ambil data laporan (POST karena pakai filter tanggal & site)
-//         Route::post('/admin/transport/trend-data', 'getReportData')
-//             ->name('admin.transport.getReportData');
-//     });
-
-//     // 🔹 (Opsional) Jika kamu pakai React Router di frontend
-//     // agar semua sub-path tetap masuk ke Blade react_page.blade.php
-//     Route::get('/admin/transport/report/{any?}', function () {
-//         return view('admin.react_page');
-//     })->where('any', '.*'); // <-- biar React Router handle route-nya
-// });
 // =======================================================
 // 🔥 1. Halaman React (harus login admin dulu)
 // =======================================================

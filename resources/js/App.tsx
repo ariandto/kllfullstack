@@ -4,7 +4,7 @@ import TrendDailyReport from "./pages/TrendDailyReport";
 import CompanyProfile from "./pages/CompanyProfile";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import ScmProfileUploader from "./pages/ScmProfileUploader";
+import OvertimeDriver from "./pages/OvertimeDriver";
 
 const path = window.location.pathname;
 
@@ -15,8 +15,9 @@ if (path.includes("/admin/transport/report")) {
 else if (path.includes("/admin/transport/scm-profile")) {
     Page = CompanyProfile;
 }
-else if (path.includes("/admin/transport/scm-uploader")) {
-    Page = ScmProfileUploader;
+
+else if (path.includes("/driver/overtime")) {
+    Page = OvertimeDriver;
 } else {
   Page = () => (
     <div className="container py-5 text-center text-muted">
