@@ -44,36 +44,17 @@ const CompanyProfile = () => {
     const [showDetailModal, setShowDetailModal] = useState(false);
 
     // Normalisasi otomatis area ke: Dalam Kota / Luar Kota
+// Normalisasi otomatis area ke: Dalam Kota / Luar Kota
 const normalizeAreaType = (areaName: string) => {
     if (!areaName) return "Luar Kota";
 
-    const text = String(areaName).toLowerCase();
+    const text = String(areaName).toLowerCase().trim();
 
-    const keywordsDalamKota = [
-        "jakarta",
-        "jkt",
-        "grogol",
-        "menteng",
-        "kemayoran",
-        "priuk",
-        "koja",
-        "kelapa gading",
-        "cempaka",
-        "pluit",
-        "cilincing",
-        "sunter",
-        "matraman",
-        "cawang",
-        "pasar",
-        "ragunan"
-    ];
-
-    // Jika salah satu keyword ditemukan → Dalam Kota
-    if (keywordsDalamKota.some(k => text.includes(k))) {
+    // Semua variasi: "dalam kota", "Dalam Kota", "DALAM KOTA", dll
+    if (text.includes("kota")) {
         return "Dalam Kota";
     }
 
-    // Default → Luar Kota
     return "Luar Kota";
 };
 
