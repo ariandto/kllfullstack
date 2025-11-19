@@ -16,6 +16,8 @@ import {
     Award,
     Zap,
     Shield,
+    MessageCircle,
+
 } from "lucide-react";
 import {
     BarChart,
@@ -108,11 +110,24 @@ const CompanyProfile = () => {
             ? pivotData.Background_Image
             : `${API_URL}/images/facilities/${pivotData.Background_Image}`
         : null;
+    const demand = pivotData?.Demand_DO ?? 0;
+const capacity = pivotData?.Capacity_DO ?? 0;
+   const utilizationRate =
+    capacity > 0 ? Math.round((demand / capacity) * 100) : 0;
 
-    const utilizationRate =
-        pivotData?.Capacity_DO > 0
-            ? Math.round((pivotData.Demand_DO / pivotData.Capacity_DO) * 100)
-            : 0;
+let condition = "";
+let conditionColor = ""; // untuk tampilan UI
+
+if (demand > capacity) {
+    condition = "Overload";
+    conditionColor = "text-danger fw-bold"; // merah
+} else if (demand === capacity) {
+    condition = "Ideal";
+    conditionColor = "text-success fw-bold"; // hijau
+} else {
+    condition = "Underload";
+    conditionColor = "text-warning fw-bold"; // kuning
+}
 
     const getUtilizationColor = (rate: number) => {
         if (rate >= 90) return "text-danger";
@@ -370,23 +385,48 @@ const CompanyProfile = () => {
                                         </div>
                                     </div>
                                     <div className="col-6 col-md-3 p-3 p-md-4">
-                                        <div className="d-flex align-items-center gap-2 mb-2">
-                                            <Phone
-                                                size={18}
-                                                className="opacity-75"
-                                            />
-                                            <small className="opacity-75">
-                                                Contact
-                                            </small>
-                                        </div>
-                                        <div className="fw-bold fs-5">
-                                            {pivotData.Telp}
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+    <div className="d-flex align-items-center gap-2 mb-2">
+        <Phone size={18} className="opacity-75" />
+        <small className="opacity-75">Contact</small>
+    </div>
 
+    {(() => {
+        const raw = String(pivotData.Telp || "").trim();
+        let phone = raw.replace(/[^0-9]/g, "");
+
+        // Normalisasi ke format 62
+        if (phone.startsWith("0")) phone = "62" + phone.substring(1);
+        if (phone.startsWith("+62")) phone = phone.replace("+", "");
+
+        return (
+            <div className="fw-bold fs-5 d-flex flex-column">
+                {/* Tampilkan nomor */}
+                <span>{phone}</span>
+
+                {/* Ikon telepon & WA */}
+                <div className="d-flex gap-3 mt-2">
+                    {/* Telepon */}
+                    <a href={`tel:${phone}`} className="text-primary">
+                        <Phone size={20} />
+                    </a>
+
+                    {/* WhatsApp */}
+                    <a
+                        href={`https://wa.me/${phone}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-success"
+                    >
+                        <MessageCircle size={20} />
+                    </a>
+                </div>
+            </div>
+        );
+    })()}
+</div>
+</div>
+</div>
+</div>
                         {/* KPI Cards - Executive Summary */}
                         <div className="row g-4">
                             {/* Utilization Card */}
@@ -400,55 +440,51 @@ const CompanyProfile = () => {
                                         }}
                                     >
                                         <div className="d-flex justify-content-between align-items-start mb-3">
-                                            <div className="text-white">
-                                                <div className="d-flex align-items-center gap-2 mb-2">
-                                                    <Target size={20} />
-                                                    <small className="opacity-75">
-                                                        Capacity Utilization
-                                                    </small>
-                                                </div>
-                                                <h1
-                                                    className={`display-4 fw-bold mb-0 ${getUtilizationColor(
-                                                        utilizationRate
-                                                    )}`}
-                                                    style={{ color: "white" }}
-                                                >
-                                                    {utilizationRate}%
-                                                </h1>
-                                            </div>
-                                            <div className="p-3 bg-white bg-opacity-25 rounded-3">
-                                                <TrendingUp
-                                                    size={24}
-                                                    className="text-white"
-                                                />
-                                            </div>
-                                        </div>
-                                        <div
-                                            className="progress bg-white bg-opacity-25"
-                                            style={{ height: "8px" }}
-                                        >
-                                            <div
-                                                className={`progress-bar ${getUtilizationBg(
-                                                    utilizationRate
-                                                )}`}
-                                                style={{
-                                                    width: `${Math.min(
-                                                        utilizationRate,
-                                                        100
-                                                    )}%`,
-                                                }}
-                                            ></div>
-                                        </div>
-                                        <div className="mt-3 text-white small">
-                                            <strong>
-                                                {pivotData.Demand_DO}
-                                            </strong>{" "}
-                                            of{" "}
-                                            <strong>
-                                                {pivotData.Capacity_DO}
-                                            </strong>{" "}
-                                            DO Capacity
-                                        </div>
+    <div className="text-white">
+        <div className="d-flex align-items-center gap-2 mb-2">
+            <Target size={20} />
+            <small className="opacity-75">
+                Capacity Utilization
+            </small>
+        </div>
+
+        <h1
+            className={`display-4 fw-bold mb-0 ${getUtilizationColor(
+                utilizationRate
+            )}`}
+            style={{ color: "white" }}
+        >
+            {utilizationRate}%
+        </h1>
+    </div>
+
+    <div className="p-3 bg-white bg-opacity-25 rounded-3">
+        <TrendingUp size={24} className="text-white" />
+    </div>
+</div>
+
+<div
+    className="progress bg-white bg-opacity-25"
+    style={{ height: "8px" }}
+>
+    <div
+        className={`progress-bar ${getUtilizationBg(utilizationRate)}`}
+        style={{
+            width: `${Math.min(utilizationRate, 100)}%`,
+        }}
+    ></div>
+</div>
+
+{/* -- DO VALUES -- */}
+<div className="mt-3 text-white small">
+    <strong>{pivotData.Demand_DO}</strong> of{" "}
+    <strong>{pivotData.Capacity_DO}</strong> DO Capacity
+</div>
+
+{/* -- CONDITION DISPLAY -- */}
+<div className={`mt-1 small ${conditionColor}`}>
+    {condition}
+</div>
                                     </div>
                                 </div>
                             </div>
@@ -1276,10 +1312,10 @@ const CompanyProfile = () => {
                                             </div>
                                             <div className="p-3 bg-light rounded-3">
                                                 <p className="text-muted small mb-2">
-                                                    Leader NIK
+                                                    Leader
                                                 </p>
                                                 <p className="fw-bold text-dark mb-0 fs-5">
-                                                    {pivotData.NIK_Leader}
+                                                    {pivotData.Name_Leader}
                                                 </p>
                                             </div>
                                         </div>
