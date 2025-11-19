@@ -387,7 +387,13 @@ if (demand > capacity) {
                                 <div className="col-6 col-md-3 p-3 p-md-4">
     <div className="d-flex align-items-center gap-2 mb-2">
         <Phone size={18} className="opacity-75" />
-        <small className="opacity-75">Contact</small>
+        {/* <small className="opacity-75">Contact</small> */}
+        <span
+        className="opacity-75"
+        style={{ fontSize: 14 }}
+    >
+        {pivotData.Name_Leader}
+    </span>
     </div>
 
     {(() => {
