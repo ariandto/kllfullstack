@@ -11,43 +11,27 @@ class Admin
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // 1️⃣ BYPASS OPTIONS biar CORS tidak mati
+        // 1️⃣ HANYA BYPASS OPTIONS (jangan kasih header CORS sendiri)
         if ($request->getMethod() === 'OPTIONS') {
-            return response('OK', 200, [
-                'Access-Control-Allow-Origin'      => $request->headers->get('Origin') ?? '*',
-                'Access-Control-Allow-Credentials' => 'true',
-                'Access-Control-Allow-Methods'     => 'GET, POST, PUT, DELETE, OPTIONS',
-                'Access-Control-Allow-Headers'     => 'Origin, Content-Type, Accept, Authorization, X-Requested-With',
-            ]);
+            return response()->json([], 200);
         }
 
-        // 2️⃣ JIKA BELUM LOGIN
+        // 2️⃣ CEK AUTH ADMIN
         if (!Auth::guard('admin')->check()) {
 
-            // ❗ INI PENTING: request API JANGAN DI-REDIRECT
+            // API → jangan redirect
             if ($request->expectsJson() || $request->is('admin/transport/*')) {
                 return response()->json([
-                    'status' => 'error',
+                    'status'  => 'error',
                     'message' => 'Unauthenticated API request.'
-                ], 401, [
-                    'Access-Control-Allow-Origin'      => $request->headers->get('Origin') ?? '*',
-                    'Access-Control-Allow-Credentials' => 'true',
-                ]);
+                ], 401);
             }
 
-            // Browser biasa redirect
+            // Request biasa → redirect
             return redirect()->route('admin.login');
         }
 
-        // 3️⃣ LANJUTKAN REQUEST
-        $response = $next($request);
-
-        // 4️⃣ TAMBAHKAN HEADER CORS DI AKHIR RESPONSE
-        $origin = $request->headers->get('Origin') ?? '*';
-
-        $response->headers->set('Access-Control-Allow-Origin', $origin);
-        $response->headers->set('Access-Control-Allow-Credentials', 'true');
-
-        return $response;
+        // 3️⃣ LANJUTKAN REQUEST TANPA TAMBAH HEADER CORS
+        return $next($request);
     }
 }

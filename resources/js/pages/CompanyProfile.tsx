@@ -1312,14 +1312,6 @@ if (demand > capacity) {
                                                     {pivotData.Is_Loading_Dock}
                                                 </p>
                                             </div>
-                                            <div className="p-3 bg-light rounded-3">
-                                                {/* <p className="text-muted small mb-2">
-                                                    Leader
-                                                </p>
-                                                <p className="fw-bold text-dark mb-0 fs-5">
-                                                    {pivotData.Name_Leader}
-                                                </p> */}
-                                            </div>
                                         </div>
                                     </div>
                                 </div>
