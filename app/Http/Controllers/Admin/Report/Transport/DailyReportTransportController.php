@@ -11,36 +11,34 @@ use Illuminate\Support\Facades\Cache;
 class DailyReportTransportController extends Controller
 {
     /**
-     * 🧭 Halaman utama (menampilkan filter + hasil awal)
+     * 🧭 Halaman utama
      */
     public function index(Request $request)
     {
-        
         ini_set('max_execution_time', 360);
         set_time_limit(120);
 
         try {
             $facilityID = $request->input('facility', 'DC INFORMA JABABEKA');
-            $StartDate  = $request->input('start_date', now()->format('Y-m-d'));
-            $EndDate    = $request->input('end_date', now()->format('Y-m-d'));
-            $Key1       = $request->input('key1', 'WMWHSE4RTL');
 
-            // 🔹 Cache 5 menit agar tidak selalu eksekusi SP berat
-            $cacheKey = "dailyreport_index_{$StartDate}_{$EndDate}_{$Key1}_{$facilityID}";
+            // Frontend hanya kirim 1 tanggal
+            $Tanggal = $request->input('date', now()->format('Y-m-d'));
+            $Key1    = $request->input('key1', 'WMWHSE4RTL');
 
-            $data = Cache::remember($cacheKey, 60, function () use ($StartDate, $EndDate, $Key1, $facilityID) {
+            // Cache key baru
+            $cacheKey = "dailyreport_index_{$Tanggal}_{$Key1}_{$facilityID}";
+
+            $data = Cache::remember($cacheKey, 60, function () use ($Tanggal, $Key1, $facilityID) {
                 return [
-                    'reportData' => DailyReportTransportModel::getReport($StartDate, $EndDate, $Key1, $facilityID),
-                    'armadaUtil' => DailyReportTransportModel::getArmadaUtilization($facilityID, $StartDate),
-                    'driverUtil' => DailyReportTransportModel::getDriverUtilization($facilityID, $StartDate),
+                    'reportData' => DailyReportTransportModel::getReport($Tanggal, $Key1, $facilityID),
+                    'armadaUtil' => DailyReportTransportModel::getArmadaUtilization($facilityID, $Tanggal),
+                    'driverUtil' => DailyReportTransportModel::getDriverUtilization($facilityID, $Tanggal),
                     'siteList'   => DailyReportTransportModel::getSiteList(),
                 ];
             });
 
-            // 🔹 Kirim ke Blade
             return view('admin.report.transport.daily_trp', [
-                'StartDate'  => $StartDate,
-                'EndDate'    => $EndDate,
+                'Tanggal'    => $Tanggal,
                 'facilityID' => $facilityID,
                 'Key1'       => $Key1,
                 'siteList'   => $data['siteList'],
@@ -48,6 +46,7 @@ class DailyReportTransportController extends Controller
                 'armadaUtil' => $data['armadaUtil'],
                 'driverUtil' => $data['driverUtil'],
             ]);
+
         } catch (\Exception $e) {
             Log::error('Daily Report Transport - Index Error: ' . $e->getMessage());
 
@@ -58,28 +57,25 @@ class DailyReportTransportController extends Controller
         }
     }
 
+
     /**
-     * ⚡ Endpoint API (AJAX saat klik "Tampilkan Data")
+     * ⚡ Endpoint API (AJAX)
      */
     public function getData(Request $request)
     {
-        // 🕒 Tambahkan batas waktu eksekusi di sini juga
         ini_set('max_execution_time', 360);
         set_time_limit(120);
 
         try {
             $facilityID = $request->input('facility', 'DC INFORMA JABABEKA');
-            $StartDate  = $request->input('start_date', now()->format('Y-m-d'));
-            $EndDate    = $request->input('end_date', now()->format('Y-m-d'));
+            $Tanggal    = $request->input('date', now()->format('Y-m-d'));
             $Key1       = $request->input('key1', 'WMWHSE4RTL');
 
-            $cacheKey = "dailyreport_data_{$StartDate}_{$EndDate}_{$Key1}_{$facilityID}";
+            $cacheKey = "dailyreport_data_{$Tanggal}_{$Key1}_{$facilityID}";
 
-            // 🔹 Cache response selama 5 menit (SP berat hanya jalan sekali)
-            $data = Cache::remember($cacheKey, 300, function () use ($StartDate, $EndDate, $Key1, $facilityID) {
-                $reportData = DailyReportTransportModel::getReport($StartDate, $EndDate, $Key1, $facilityID);
-                $armadaUtil = DailyReportTransportModel::getArmadaUtilization($facilityID, $StartDate);
-                $driverUtil = DailyReportTransportModel::getDriverUtilization($facilityID, $StartDate);
+            $data = Cache::remember($cacheKey, 300, function () use ($Tanggal, $Key1, $facilityID) {
+
+                $reportData = DailyReportTransportModel::getReport($Tanggal, $Key1, $facilityID);
 
                 return [
                     'prodCustomer'       => $reportData['prodCustomer'] ?? [],
@@ -91,8 +87,8 @@ class DailyReportTransportController extends Controller
                     'slaCustomer'        => $reportData['slaCustomer'] ?? [],
                     'prodArmadaCust'     => $reportData['prodArmadaCust'] ?? [],
                     'prodArmadaStore'    => $reportData['prodArmadaStore'] ?? [],
-                    'armadaUtil'         => $armadaUtil,
-                    'driverUtil'         => $driverUtil,
+                    'armadaUtil'         => DailyReportTransportModel::getArmadaUtilization($facilityID, $Tanggal),
+                    'driverUtil'         => DailyReportTransportModel::getDriverUtilization($facilityID, $Tanggal),
                 ];
             });
 
@@ -100,6 +96,7 @@ class DailyReportTransportController extends Controller
                 'status' => 'success',
                 'data'   => $data,
             ]);
+
         } catch (\Exception $e) {
             Log::error('Daily Report Transport - getData Error: ' . $e->getMessage());
 
@@ -110,26 +107,25 @@ class DailyReportTransportController extends Controller
         }
     }
 
+
     /**
-     * 📍 Mendapatkan daftar site untuk filter (AJAX)
-     */public function getSiteListDaily()
-{
-    try {
-        $sites = DailyReportTransportModel::getSiteList();
-        \Log::info('📦 Site list data:', is_array($sites) ? $sites : [$sites]);
-        return response()->json([
-            'status' => 'success',
-            'data' => $sites
-        ]);
-    } catch (\Exception $e) {
-        \Log::error('Daily Report Transport - getSiteList Error: ' . $e->getMessage());
-        return response()->json([
-            'status' => 'error',
-            'message' => 'Gagal mengambil daftar facility: ' . $e->getMessage()
-        ], 500);
+     * 📍 Ambil daftar facility
+     */
+    public function getSiteListDaily()
+    {
+        try {
+            $sites = DailyReportTransportModel::getSiteList();
+
+            return response()->json([
+                'status' => 'success',
+                'data'   => $sites
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'Gagal mengambil daftar facility: ' . $e->getMessage()
+            ], 500);
+        }
     }
-}
-
-
-
 }

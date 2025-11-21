@@ -12,6 +12,8 @@ export default API_URL
 
 // export const API_URL = https://scmlogisticapps.klgsys.com
 
+//api dev htttp://localhost:8000
+
 
 
 

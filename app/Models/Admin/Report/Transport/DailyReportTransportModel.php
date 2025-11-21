@@ -12,33 +12,48 @@ class DailyReportTransportModel extends Model
 
     /**
      * 🔹 Ambil data utama (Summary)
+     * SP: EXEC Daily_Report_Transport @Mode, @StartDate, @EndDate, @Key1, @FacilityID
+     * Backend: cukup pakai 1 tanggal → StartDate = EndDate = $Tanggal
      */
-    public static function getReport($StartDate, $EndDate, $Key1, $FacilityID)
+    public static function getReport($Tanggal, $Key1, $FacilityID)
     {
         try {
-            // Cache key unik berdasarkan parameter
-            $cacheKey = "daily_report_{$StartDate}_{$EndDate}_{$Key1}_{$FacilityID}";
+            $StartDate = $Tanggal;
+            $EndDate   = $Tanggal;
+
+            $cacheKey = "daily_report_{$Tanggal}_{$Key1}_{$FacilityID}";
 
             return Cache::remember($cacheKey, 60, function () use ($StartDate, $EndDate, $Key1, $FacilityID) {
+
                 $pdo = DB::connection('sqlsrv')->getPdo();
+
+                // 5 parameter sesuai SP: Mode, StartDate, EndDate, Key1, FacilityID
                 $stmt = $pdo->prepare("
                     SET NOCOUNT ON;
-                    EXEC [dbo].[Daily_Report_Transport] '', ?, ?, ?, ?
+                    EXEC [dbo].[Daily_Report_Transport] ?, ?, ?, ?, ?
                 ");
-                $stmt->execute([$StartDate, $EndDate, $Key1, $FacilityID]);
+                $stmt->execute([
+                    '',         // Mode summary
+                    $StartDate,
+                    $EndDate,
+                    $Key1,
+                    $FacilityID,
+                ]);
 
                 $results = [];
-                $index = 0;
+                $index   = 0;
 
+                // 🔒 Proteksi IMSSP: cek columnCount dulu
                 do {
-                    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                    if (!empty($data)) {
-                        $results[$index] = $data;
+                    if ($stmt->columnCount() > 0) {
+                        $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                        if (!empty($data)) {
+                            $results[$index] = $data;
+                            $index++;
+                        }
                     }
-                    $index++;
                 } while ($stmt->nextRowset());
 
-                // Struktur hasil tetap seperti versi lama (untuk React)
                 return [
                     'prodCustomer'        => $results[0] ?? [],
                     'prodStore'           => $results[1] ?? [],
@@ -60,20 +75,35 @@ class DailyReportTransportModel extends Model
 
     /**
      * 🔹 Ambil data detail (breakdown)
+     * Tetap SP yang sama, Mode='Detail'
+     * Backend: 1 tanggal → StartDate = EndDate = $Tanggal
      */
-    public static function getDetail($StartDate, $EndDate, $Key1, $FacilityID)
+    public static function getDetail($Tanggal, $Key1, $FacilityID)
     {
         try {
+            $StartDate = $Tanggal;
+            $EndDate   = $Tanggal;
+
             $pdo = DB::connection('sqlsrv')->getPdo();
+
             $stmt = $pdo->prepare("
                 SET NOCOUNT ON;
-                EXEC [dbo].[Daily_Report_Transport] 'Detail', ?, ?, ?, ?
+                EXEC [dbo].[Daily_Report_Transport] ?, ?, ?, ?, ?
             ");
-            $stmt->execute([$StartDate, $EndDate, $Key1, $FacilityID]);
+            $stmt->execute([
+                'Detail',
+                $StartDate,
+                $EndDate,
+                $Key1,
+                $FacilityID,
+            ]);
 
             $results = [];
+
             do {
-                $results[] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                if ($stmt->columnCount() > 0) {
+                    $results[] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                }
             } while ($stmt->nextRowset());
 
             return $results;
@@ -97,6 +127,8 @@ class DailyReportTransportModel extends Model
                 $spName = 'sp_GetArmadaUtilization_AHI';
             } elseif (str_contains(strtoupper($site), 'INFORMA JABABEKA')) {
                 $spName = 'sp_GetArmadaUtilization_HCI';
+            } elseif (str_contains(strtoupper($site), 'INFORMA CIKUPA')) {
+                $spName = 'sp_GetArmadaUtilization_CIKUPA';
             }
 
             if (!$spName) {
@@ -108,10 +140,12 @@ class DailyReportTransportModel extends Model
 
             $results = [];
             do {
-                $results[] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                if ($stmt->columnCount() > 0) {
+                    $results[] = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                }
             } while ($stmt->nextRowset());
 
-            // Ambil index ke-1 (seperti VB.NET)
+            // Ambil index ke-1 (seperti VB)
             return $results[1] ?? [];
 
         } catch (\Exception $e) {
@@ -127,7 +161,6 @@ class DailyReportTransportModel extends Model
         try {
             $pdo = DB::connection('sqlsrv')->getPdo();
 
-            // ✅ Jangan dihapus — mapping wajib
             $facilityMap = [
                 'DC AHI JABABEKA'     => 'AHI JABABEKA',
                 'DC INFORMA CIKUPA'   => 'HCI CIKUPA',
@@ -148,14 +181,16 @@ class DailyReportTransportModel extends Model
             $stmt->execute([$startDate, $endDate, $site, $facility]);
 
             $results = [];
-            $index = 0;
+            $index   = 0;
 
             do {
-                $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-                if (!empty($data)) {
-                    $results[$index] = $data;
+                if ($stmt->columnCount() > 0) {
+                    $data = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+                    if (!empty($data)) {
+                        $results[$index] = $data;
+                        $index++;
+                    }
                 }
-                $index++;
             } while ($stmt->nextRowset());
 
             // Gunakan hasil ke-3 (index ke-2)

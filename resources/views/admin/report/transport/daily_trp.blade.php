@@ -155,31 +155,31 @@
     <div class="card-header text-white fw-bold text-center" style="background:linear-gradient(135deg,var(--teal),var(--blue))">
       DAILY REPORT TRANSPORT
     </div>
-    <div class="card-body" style="background-color:#f8f9fa">
-      <form id="filterForm" class="row g-3 mb-4">
-        <div class="col-lg-4 col-md-6 col-12">
-          <label class="form-label fw-semibold">Facility</label>
-          <select class="form-select" id="facility" required>
-            <option value="">-- Klik untuk memuat daftar facility --</option>
-          </select>
-        </div>
-        <div class="col-lg-3 col-md-6 col-12">
-          <label class="form-label fw-semibold">Tanggal Awal</label>
-          <input type="date" class="form-control" id="start_date" value="{{ $StartDate }}">
-        </div>
-        <div class="col-lg-3 col-md-6 col-12">
-          <label class="form-label fw-semibold">Tanggal Akhir</label>
-          <input type="date" class="form-control" id="end_date" value="{{ $EndDate }}">
-        </div>
-        <div class="col-lg-2 col-md-6 col-12 d-flex align-items-end">
-          <button type="submit" id="btnTampil" class="btn btn-primary w-100" style="height:42px;">
-            <div id="spinnerOverlay" class="spinner-overlay d-none">
-              <div class="spinner-border spinner-border-sm" role="status"></div>
-            </div>
-            <span id="btnText"><i class="fas fa-search me-1"></i> Tampilkan</span>
-          </button>
-        </div>
-      </form>
+    <div class="card-body" style="background-color:#f8f9fa justify-content-center" >
+      <form id="filterForm" class="row g-3 mb-4 justify-content-center">
+
+  <div class="col-lg-4 col-md-6 col-12">
+    <label class="form-label fw-semibold">Facility</label>
+    <select class="form-select" id="facility" required>
+      <option value="">-- Klik untuk memuat daftar facility --</option>
+    </select>
+  </div>
+
+  <div class="col-lg-3 col-md-6 col-12">
+    <label class="form-label fw-semibold">Tanggal</label>
+    <input type="date" class="form-control" id="date" value="{{ $Tanggal ?? now()->format('Y-m-d') }}">
+  </div>
+
+  <div class="col-lg-2 col-md-6 col-12 d-flex align-items-end">
+    <button type="submit" id="btnTampil" class="btn btn-primary w-100" style="height:42px;">
+      <div id="spinnerOverlay" class="spinner-overlay d-none">
+        <div class="spinner-border spinner-border-sm" role="status"></div>
+      </div>
+      <span id="btnText"><i class="fas fa-search me-1"></i> Tampilkan</span>
+    </button>
+  </div>
+
+</form>
 
       <div id="summaryPieContainer" class="mb-4"></div>
       <div id="dataContainer" class="mt-3"></div>
@@ -916,11 +916,11 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = `<div class="text-center p-4"><div class="spinner-border"></div><p>Memuat data...</p></div>`;
 
     const payload = {
-      facility: facilitySelect.value,
-      start_date: document.getElementById("start_date").value,
-      end_date: document.getElementById("end_date").value,
-      key1: "WMWHSE4RTL"
-    };
+  facility: facilitySelect.value,
+  date: document.getElementById("date").value,
+  key1: "WMWHSE4RTL"
+};
+
     const startTime = performance.now();
 
     try {
@@ -959,7 +959,7 @@ document.addEventListener("DOMContentLoaded", () => {
         setTimeout(() => renderSLAChartAndMonitoring(d), 300);
 
         // ===== Toast success =====
-        showToast(`✅ Data berhasil dimuat untuk ${payload.facility} (${payload.start_date} s/d ${payload.end_date})`);
+        showToast(`✅ Data berhasil dimuat untuk ${payload.facility} (${payload.date})`);
         showToast(`⏱️ Waktu eksekusi: ${execTime} detik`, 7000);
       } else {
         container.innerHTML = `<div class="alert alert-warning">⚠️ Tidak ada data ditemukan.</div>`;
