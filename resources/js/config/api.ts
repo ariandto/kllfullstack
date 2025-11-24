@@ -4,6 +4,7 @@ import axios from "axios";
 export const API_URL = "http://localhost:8000";
 
 
+
 export default API_URL
 
 //
@@ -11,7 +12,7 @@ export default API_URL
 
 // export const API_URL = https://scmlogisticapps.klgsys.com
 
-//api dev htttp://localhost:8000
+//api dev http://localhost:8000
 
 
 
