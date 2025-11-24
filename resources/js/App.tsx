@@ -4,7 +4,7 @@ import TrendDailyReport from "./pages/TrendDailyReport";
 import CompanyProfile from "./pages/CompanyProfile";
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import OvertimeDriver from "./pages/OvertimeDriver";
+import SummaryDcandHub from "./pages/SummaryDcandHub";
 
 const path = window.location.pathname;
 
@@ -16,8 +16,8 @@ else if (path.includes("/admin/transport/scm-profile")) {
     Page = CompanyProfile;
 }
 
-else if (path.includes("/driver/overtime")) {
-    Page = OvertimeDriver;
+else if (path.includes("/admin/transport/summary-dc-hub")) {
+    Page = SummaryDcandHub;
 } else {
   Page = () => (
     <div className="container py-5 text-center text-muted">

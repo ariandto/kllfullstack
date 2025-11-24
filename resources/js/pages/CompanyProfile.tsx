@@ -73,19 +73,6 @@ const CompanyProfile = () => {
     const capacity = pivotData?.Capacity_DO ?? 0;
     const utilizationRate = capacity > 0 ? Math.round((demand / capacity) * 100) : 0;
 
-    let condition = "";
-    let conditionColor = "";
-
-    if (demand > capacity) {
-        condition = "Overload";
-        conditionColor = "text-danger fw-bold";
-    } else if (demand === capacity) {
-        condition = "Ideal";
-        conditionColor = "text-success fw-bold";
-    } else {
-        condition = "Underload";
-        conditionColor = "text-warning fw-bold";
-    }
 
     const getUtilizationColor = (rate: number) => {
         if (rate >= 90) return "text-danger";
@@ -115,6 +102,36 @@ const CompanyProfile = () => {
                         </div>
                     </div>
                 </div>
+
+                {/* <nav className="navbar navbar-expand-lg" style={{ background: "#ffffff" }}>
+                    <div className="container-fluid px-3">
+                        <button className="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#coverageNavbar">
+                            <span className="navbar-toggler-icon"></span>
+                        </button>
+
+                        <div className="collapse navbar-collapse" id="coverageNavbar">
+                            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex align-items-center gap-3">
+                                <li className="nav-item">
+                                    <a className="nav-link text-dark fw-semibold" href="/admin/transport/summary-dc-hub">
+                                        Summary DC & HUB
+                                    </a>
+                                </li>
+
+                                <li className="nav-item">
+                                    <a className="nav-link text-dark fw-semibold" href="#coverage-city">
+                                        SLA and Orders
+                                    </a>
+                                </li>
+
+                                <li className="nav-item">
+                                    <a className="nav-link text-dark fw-semibold" href="#coverage-city">
+                                        Dept. Structure
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </nav> */}
 
                 {/* Facility Selector - Premium Style */}
                 <div
@@ -799,18 +816,24 @@ const CompanyProfile = () => {
                                             <Ruler className="text-primary" size={40} />
                                             Area Specifications
                                         </h5>
+
                                         <div className="vstack gap-3">
+                                            {/* Area Staging */}
                                             <div className="p-3 bg-light rounded-3">
                                                 <p className="text-muted small mb-2">Area Staging (P × L × T)</p>
-                                                <p className="fw-bold text-dark mb-0 fs-5">
-                                                    {pivotData.Area_Staging_P} × {pivotData.Area_Staging_L} × {pivotData.Area_Staging_T}
+                                                <p className="fw-bold text-dark mb-1 fs-5">
+                                                    {pivotData.Area_Staging_P}m × {pivotData.Area_Staging_L}m × {pivotData.Area_Staging_T}m
                                                 </p>
+                                                <p className="text-primary fw-bold mb-0">Luas: {pivotData.Area_Staging_P * pivotData.Area_Staging_L} m²</p>
                                             </div>
+
+                                            {/* Area Loading */}
                                             <div className="p-3 bg-light rounded-3">
                                                 <p className="text-muted small mb-2">Area Loading (P × L)</p>
-                                                <p className="fw-bold text-dark mb-0 fs-5">
-                                                    {pivotData.Area_Loading_P} × {pivotData.Area_Loading_L}
+                                                <p className="fw-bold text-dark mb-1 fs-5">
+                                                    {pivotData.Area_Loading_P}m × {pivotData.Area_Loading_L}m
                                                 </p>
+                                                <p className="text-primary fw-bold mb-0">Luas: {pivotData.Area_Loading_P * pivotData.Area_Loading_L} m²</p>
                                             </div>
 
                                             <div className="p-3 bg-light rounded-3">
