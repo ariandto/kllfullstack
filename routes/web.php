@@ -67,7 +67,7 @@ use App\Http\Middleware\CustomCors;
 //use App\Models\Admin;
 use App\Http\Middleware\Admin;
 use App\Http\Controllers\Admin\Dashboard\Transport\SCMTransportProfileController;
-use App\Http\Controllers\Admin\Dashboard\Transport\ScmCrudController;
+use App\Http\Controllers\Admin\Dashboard\Transport\SCMAssetArmadaController;
 
 
 Route::get('/', function () {
@@ -702,39 +702,67 @@ Route::controller(TrendDailyReportController::class)->group(function () {
 
 
 
+
 Route::middleware('admin')->group(function () {
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCM PROFILE
+    |--------------------------------------------------------------------------
+    */
 
     // 1. React Page (halaman utama SCM Profile)
     Route::get('/admin/transport/scm-profile', function () {
         return view('admin.react_page');
     })->name('transport.scm.profile');
 
-    // 2. API List Facility (JSON)
-    Route::get('/transport/scm-profile', 
+    // 2. API – list facility 
+    Route::get('/transport/scm-profile',
         [SCMTransportProfileController::class, 'getFacilityList']
     )->name('transport.scm.profile.list');
 
-    // 3. API Pivot Armada (JSON)
+    // 3. API – pivot armada
     Route::get('/transport/scm-profile/armada',
         [SCMTransportProfileController::class, 'getFacilityArmadaPivot']
     )->name('transport.scm.profile.armada');
 
-     // Halaman React untuk SCM Upload
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCM ASSET ARMADA
+    |--------------------------------------------------------------------------
+    */
+
+    // Halaman React untuk SCM Asset Armada
+    Route::get('/admin/transport/assetscm', function () {
+        return view('admin.react_page');
+    })->name('transport.scm.asset');
+
+    // API – list facility (PAKAI ENDPOINT YANG SUDAH ADA)
+    // get /transport/scm-profile
+
+    // API – pivot armada khusus Asset Armada
+    Route::get('/transport/assetscm/pivot',
+        [SCMAssetArmadaController::class, 'getFacilityArmadaPivot']
+    )->name('transport.scm.asset.pivot');
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | SCM UPLOADER
+    |--------------------------------------------------------------------------
+    */
+
     Route::get('/admin/transport/scm-uploader', function () {
         return view('admin.react_page');
     })->name('transport.scm.uploader');
+
 });
 
-Route::middleware('admin')->prefix('admin/dashboard/transport')->group(function () {
 
-    Route::get('/scmcrud', function () {
-        return view('admin.dashboard.transport.scmcrud');
-    })->name('scmcrud.view');
 
-    Route::get('/facility', [ScmCrudController::class, 'index']);
-    Route::post('/facility', [ScmCrudController::class, 'store']);
-    Route::put('/facility/{facility_ID}', [ScmCrudController::class, 'update']);
-});
+
 
 //PENTING JANGAN DIHAPUS YA ROUTE INI BUAT GET USER INFO
 // Add this route for getting user info
