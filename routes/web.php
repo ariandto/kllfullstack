@@ -727,13 +727,6 @@ Route::middleware('admin')->group(function () {
     )->name('transport.scm.profile.armada');
 
 
-
-    /*
-    |--------------------------------------------------------------------------
-    | SCM ASSET ARMADA
-    |--------------------------------------------------------------------------
-    */
-
     // Halaman React untuk SCM Asset Armada
     Route::get('/admin/transport/assetscm', function () {
         return view('admin.react_page');
@@ -746,13 +739,6 @@ Route::middleware('admin')->group(function () {
     Route::get('/transport/assetscm/pivot',
         [SCMAssetArmadaController::class, 'getFacilityArmadaPivot']
     )->name('transport.scm.asset.pivot');
-
-
-    /*
-    |--------------------------------------------------------------------------
-    | SCM UPLOADER
-    |--------------------------------------------------------------------------
-    */
 
     Route::get('/admin/transport/scm-uploader', function () {
         return view('admin.react_page');
