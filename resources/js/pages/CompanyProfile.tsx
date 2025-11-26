@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { MapPin, Building2, Truck, Package, Phone, Calendar, Ruler, BarChart3, TrendingUp, AlertCircle, Users, Activity, Target, Award, Zap, Shield } from "lucide-react";
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import API_URL from "../config/api";
+import { motion } from "framer-motion";
 
 const CompanyProfile = () => {
     const [facilities, setFacilities] = useState<any[]>([]);
@@ -73,7 +74,6 @@ const CompanyProfile = () => {
     const capacity = pivotData?.Capacity_DO ?? 0;
     const utilizationRate = capacity > 0 ? Math.round((demand / capacity) * 100) : 0;
 
-
     const getUtilizationColor = (rate: number) => {
         if (rate >= 90) return "text-danger";
         if (rate >= 70) return "text-warning";
@@ -93,6 +93,7 @@ const CompanyProfile = () => {
                 background: "linear-gradient(135deg, #fffcfcff 0%, #f1e8e8ff 100%)",
             }}
         >
+            
             <div className="content container-fluid px-3 px-md-5 mb-5 py-4">
                 {/* Premium Header */}
                 <div className="mb-4">
@@ -101,9 +102,7 @@ const CompanyProfile = () => {
                             <h1 className="display-5 fw-bold text-dark mb-2">SCM Transport Profile</h1>
                         </div>
                     </div>
-                </div>
-
-                {/* <nav className="navbar navbar-expand-lg" style={{ background: "#ffffff" }}>
+                    <nav className="navbar navbar-expand-lg" style={{ background: "#ffffff" }}>
                     <div className="container-fluid px-3">
                         <button className="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#coverageNavbar">
                             <span className="navbar-toggler-icon"></span>
@@ -113,7 +112,7 @@ const CompanyProfile = () => {
                             <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex align-items-center gap-3">
                                 <li className="nav-item">
                                     <a className="nav-link text-dark fw-semibold" href="/admin/transport/summary-dc-hub">
-                                        Summary DC & HUB
+                                        Summary Asset Armada
                                     </a>
                                 </li>
 
@@ -131,7 +130,10 @@ const CompanyProfile = () => {
                             </ul>
                         </div>
                     </div>
-                </nav> */}
+                </nav>
+                </div>
+
+                
 
                 {/* Facility Selector - Premium Style */}
                 <div
@@ -300,7 +302,13 @@ const CompanyProfile = () => {
                         <div className="row g-4">
                             {/* Utilization Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.35, ease: "easeOut" }}
+                                    className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden"
+                                >
                                     <div
                                         className="card-body p-4"
                                         style={{
@@ -339,22 +347,22 @@ const CompanyProfile = () => {
                                             ></div>
                                         </div>
 
-                                        {/* -- DO VALUES -- */}
                                         <div className="mt-3 text-white small">
                                             <strong>{pivotData.Demand_DO}</strong> of <strong>{pivotData.Capacity_DO}</strong> DO Capacity
                                         </div>
-
-                                        {/* -- CONDITION DISPLAY --
-<div className={`mt-1 small ${conditionColor}`}>
-    {condition}
-</div> */}
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
 
                             {/* Total Fleet Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.35, ease: "easeOut" }}
+                                    className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden"
+                                >
                                     <div
                                         className="card-body p-4"
                                         style={{
@@ -386,12 +394,18 @@ const CompanyProfile = () => {
                                             <strong>Active</strong> Vehicle Assets
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
 
                             {/* CBM Capacity Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.35, ease: "easeOut" }}
+                                    className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden"
+                                >
                                     <div
                                         className="card-body p-4"
                                         style={{
@@ -416,12 +430,18 @@ const CompanyProfile = () => {
                                             <strong>Cubic Meter</strong>
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
 
                             {/* Manpower Card */}
                             <div className="col-12 col-md-6 col-xl-3">
-                                <div className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden">
+                                <motion.div
+                                    initial={{ opacity: 0, y: 30 }}
+                                    animate={{ opacity: 1, y: 0 }}
+                                    whileHover={{ scale: 1.05 }}
+                                    transition={{ duration: 0.35, ease: "easeOut" }}
+                                    className="card shadow-lg border-0 rounded-4 h-100 overflow-hidden"
+                                >
                                     <div
                                         className="card-body p-4"
                                         style={{
@@ -452,7 +472,7 @@ const CompanyProfile = () => {
                                             <strong>Active</strong> Personnel
                                         </div>
                                     </div>
-                                </div>
+                                </motion.div>
                             </div>
                         </div>
 

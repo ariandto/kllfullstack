@@ -118,6 +118,15 @@
     pointer-events: none;
 }
 
+.hover-animation {
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-animation:hover {
+    transform: translateY(-5px) scale(1.02);
+    box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+}
+
 /* Responsiveness untuk mobile */
 @media (max-width: 576px) {
     .hero-image-wrapper {
