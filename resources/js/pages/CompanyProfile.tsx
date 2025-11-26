@@ -3,6 +3,7 @@ import { MapPin, Building2, Truck, Package, Phone, Calendar, Ruler, BarChart3, T
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from "recharts";
 import API_URL from "../config/api";
 import { motion } from "framer-motion";
+import SCMNavbar from "../components/ScmNavbar";
 
 const CompanyProfile = () => {
     const [facilities, setFacilities] = useState<any[]>([]);
@@ -86,96 +87,69 @@ const CompanyProfile = () => {
         return "bg-success";
     };
 
-    return (
+return (
+<>
+    {/* NAVBAR */}
+    <SCMNavbar />
+
+    {/* WRAPPER CONTENT */}
+    <div
+        style={{
+            minHeight: "100vh",
+            background: "linear-gradient(135deg, #fffcfcff 0%, #f1e8e8ff 100%)",
+        }}
+    >
+
+        {/* Facility Selector - Premium Style */}
         <div
+            className="card shadow-lg border-0 rounded-4 mb-4"
             style={{
-                minHeight: "100vh",
-                background: "linear-gradient(135deg, #fffcfcff 0%, #f1e8e8ff 100%)",
+                background: "rgba(255, 255, 255, 0.95)",
+                backdropFilter: "blur(10px)",
             }}
         >
-            
-            <div className="content container-fluid px-3 px-md-5 mb-5 py-4">
-                {/* Premium Header */}
-                <div className="mb-4">
-                    <div className="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center gap-3">
-                        <div>
-                            <h1 className="display-5 fw-bold text-dark mb-2">SCM Transport Profile</h1>
-                        </div>
+            <div className="card-body p-4">
+                <div className="row align-items-center">
+                    <div className="col-md-3">
+                        <label className="form-label fw-bold text-dark mb-2 d-flex align-items-center gap-2">
+                            <Building2 size={20} className="text-primary" />
+                            Select Facility
+                        </label>
                     </div>
-                    <nav className="navbar navbar-expand-lg" style={{ background: "#ffffff" }}>
-                    <div className="container-fluid px-3">
-                        <button className="navbar-toggler bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#coverageNavbar">
-                            <span className="navbar-toggler-icon"></span>
-                        </button>
 
-                        <div className="collapse navbar-collapse" id="coverageNavbar">
-                            <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex align-items-center gap-3">
-                                <li className="nav-item">
-                                    <a className="nav-link text-dark fw-semibold" href="/admin/transport/summary-dc-hub">
-                                        Summary Asset Armada
-                                    </a>
-                                </li>
-
-                                <li className="nav-item">
-                                    <a className="nav-link text-dark fw-semibold" href="#coverage-city">
-                                        SLA and Orders
-                                    </a>
-                                </li>
-
-                                <li className="nav-item">
-                                    <a className="nav-link text-dark fw-semibold" href="#coverage-city">
-                                        Dept. Structure
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </nav>
-                </div>
-
-                
-
-                {/* Facility Selector - Premium Style */}
-                <div
-                    className="card shadow-lg border-0 rounded-4 mb-4"
-                    style={{
-                        background: "rgba(255, 255, 255, 0.95)",
-                        backdropFilter: "blur(10px)",
-                    }}
-                >
-                    <div className="card-body p-4">
-                        <div className="row align-items-center">
-                            <div className="col-md-3">
-                                <label className="form-label fw-bold text-dark mb-2 d-flex align-items-center gap-2">
-                                    <Building2 size={20} className="text-primary" />
-                                    Select Facility
-                                </label>
+                    <div className="col-md-9">
+                        {loadingFacility ? (
+                            <div className="d-flex align-items-center gap-2 text-muted">
+                                <div
+                                    className="spinner-border spinner-border-sm text-primary"
+                                    role="status"
+                                >
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                                <span>Loading facilities...</span>
                             </div>
-                            <div className="col-md-9">
-                                {loadingFacility ? (
-                                    <div className="d-flex align-items-center gap-2 text-muted">
-                                        <div className="spinner-border spinner-border-sm text-primary" role="status">
-                                            <span className="visually-hidden">Loading...</span>
-                                        </div>
-                                        <span>Loading facilities...</span>
-                                    </div>
-                                ) : (
-                                    <select className="form-select form-select-lg shadow-sm border-2" value={selectedFacility} onChange={handleFacilityChange} style={{ borderColor: "#66dbeaff" }}>
-                                        <option value="">-- Choose Facility --</option>
-                                        {facilities.map((f, idx) => (
-                                            <option key={idx} value={f.Facility}>
-                                                {f.Facility}
-                                            </option>
-                                        ))}
-                                    </select>
-                                )}
-                            </div>
-                        </div>
+                        ) : (
+                            <select
+                                className="form-select form-select-lg shadow-sm border-2"
+                                value={selectedFacility}
+                                onChange={handleFacilityChange}
+                                style={{ borderColor: "#66dbeaff" }}
+                            >
+                                <option value="">-- Choose Facility --</option>
+                                {facilities.map((f, idx) => (
+                                    <option key={idx} value={f.Facility}>
+                                        {f.Facility}
+                                    </option>
+                                ))}
+                            </select>
+                        )}
                     </div>
                 </div>
+            </div>
+        </div>
 
-                {/* Empty State */}
-                {!selectedFacility && !loadingPivot && (
+        {/* Empty State */}
+        {!selectedFacility && !loadingPivot && (
                     <div className="card shadow-lg border-0 rounded-4" style={{ background: "rgba(255, 255, 255, 0.95)" }}>
                         <div className="card-body text-center py-5">
                             <div className="mb-4">
@@ -1008,7 +982,7 @@ const CompanyProfile = () => {
                     </div>
                 )}
             </div>
-        </div>
+            </>
     );
 };
 

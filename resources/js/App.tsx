@@ -1,33 +1,39 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import TrendDailyReport from "./pages/TrendDailyReport";
 import CompanyProfile from "./pages/CompanyProfile";
+import SummaryDcandHub from "./pages/SummaryDcandHub";
+import SummaryAsset from "./pages/SummaryAsset";
+
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
-import SummaryDcandHub from "./pages/SummaryDcandHub";
 
-const path = window.location.pathname;
+// Router Mapping
+const App = () => (
+  <BrowserRouter>
+    <Routes>
+      <Route path="/admin/transport/report" element={<TrendDailyReport />} />
+      <Route path="/admin/transport/scm-profile" element={<CompanyProfile />} />
+      <Route path="/admin/transport/summary-dc-hub" element={<SummaryDcandHub />} />
+      <Route path="/admin/transport/assetscm" element={<SummaryAsset />} />
 
-let Page;
-if (path.includes("/admin/transport/report")) {
-  Page = TrendDailyReport;
-}
-else if (path.includes("/admin/transport/scm-profile")) {
-    Page = CompanyProfile;
-}
+      {/* fallback */}
+      <Route
+        path="*"
+        element={
+          <div className="container py-5 text-center text-muted">
+            <h4>Halaman tidak ditemukan</h4>
+          </div>
+        }
+      />
+    </Routes>
+  </BrowserRouter>
+);
 
-else if (path.includes("/admin/transport/summary-dc-hub")) {
-    Page = SummaryDcandHub;
-} else {
-  Page = () => (
-    <div className="container py-5 text-center text-muted">
-      <h4>Halaman tidak ditemukan</h4>
-    </div>
-  );
-}
-
-ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
+ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <Page />
+    <App />
   </React.StrictMode>
 );

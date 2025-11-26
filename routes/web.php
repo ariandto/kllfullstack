@@ -702,50 +702,52 @@ Route::controller(TrendDailyReportController::class)->group(function () {
 
 
 
-
 Route::middleware('admin')->group(function () {
-
-    /*
-    |--------------------------------------------------------------------------
-    | SCM PROFILE
-    |--------------------------------------------------------------------------
-    */
 
     // 1. React Page (halaman utama SCM Profile)
     Route::get('/admin/transport/scm-profile', function () {
         return view('admin.react_page');
     })->name('transport.scm.profile');
 
-    // 2. API – list facility 
-    Route::get('/transport/scm-profile',
+    // 2. API List Facility (JSON)
+    Route::get('/transport/scm-profile', 
         [SCMTransportProfileController::class, 'getFacilityList']
     )->name('transport.scm.profile.list');
 
-    // 3. API – pivot armada
+    // 3. API Pivot Armada (JSON)
     Route::get('/transport/scm-profile/armada',
         [SCMTransportProfileController::class, 'getFacilityArmadaPivot']
     )->name('transport.scm.profile.armada');
 
-
-    // Halaman React untuk SCM Asset Armada
-    Route::get('/admin/transport/assetscm', function () {
-        return view('admin.react_page');
-    })->name('transport.scm.asset');
-
-    // API – list facility (PAKAI ENDPOINT YANG SUDAH ADA)
-    // get /transport/scm-profile
-
-    // API – pivot armada khusus Asset Armada
-    Route::get('/transport/assetscm/pivot',
-        [SCMAssetArmadaController::class, 'getFacilityArmadaPivot']
-    )->name('transport.scm.asset.pivot');
-
+     // Halaman React untuk SCM Upload
     Route::get('/admin/transport/scm-uploader', function () {
         return view('admin.react_page');
     })->name('transport.scm.uploader');
-
 });
 
+
+
+Route::prefix('admin/transport/assetscm')
+    ->middleware('admin')
+    ->group(function () {
+
+        // List zone (HUB, NDC, RDC, dsb)
+        Route::get('/zones', [
+            \App\Http\Controllers\Admin\Dashboard\Transport\SCMAssetArmadaController::class,
+            'getZoneList'
+        ]);
+
+        // Get Pivot Armada by Zone
+        Route::get('/pivot', [
+            \App\Http\Controllers\Admin\Dashboard\Transport\SCMAssetArmadaController::class,
+            'getArmadaPivotByZone'
+        ]);
+
+        // Halaman React
+        Route::get('/', function () {
+            return view('admin.react_page');
+        })->name('transport.scm.asset');
+    });
 
 
 

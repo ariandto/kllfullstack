@@ -4,50 +4,122 @@ namespace App\Models\Admin\Dashboard\Transport;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class SCMAssetArmada extends Model
 {
     protected $connection = 'sqlsrv';
 
     /**
-     * Get list of facility
+     * Get list of available zones
      */
-    public static function getFacilityList()
+    public static function getZoneList()
     {
         try {
-            $query = "EXEC [dbo].[udsp_Get_Data] 'Get SCM Facility', '', ''";
-            $result = DB::select($query);
+            $result = DB::connection('sqlsrv')->select(
+                "SELECT DISTINCT zone FROM MASTER_FACILITY_V1 WHERE zone IS NOT NULL AND LTRIM(RTRIM(zone)) <> ''"
+            );
 
-            return json_decode(json_encode($result), true); // return array
+            return array_map(fn($r) => (array)$r, $result);
+
         } catch (\Exception $e) {
-            throw new \Exception('Error executing stored procedure Get SCM Facility: ' . $e->getMessage());
+            Log::error("SCMAssetArmada::getZoneList ERROR", [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw new \Exception('Error executing query Get SCM Zone: ' . $e->getMessage());
         }
     }
 
-    public static function getFacilityArmadaPivot($facilityName)
-{
-    if (empty($facilityName)) {
-        throw new \InvalidArgumentException("Facility name is required.");
+
+    /**
+     * Get Armada Pivot based on Zone (NDC, RDC, or multi-zone "NDC,RDC")
+     */
+    public static function getArmadaPivotByZone($zone)
+    {
+        if (empty($zone)) {
+            throw new \InvalidArgumentException("Zone is required.");
+        }
+
+        // If array → "NDC,RDC"
+        if (is_array($zone)) {
+            $zone = implode(',', $zone);
+        }
+
+        try {
+            Log::info("SCMAssetArmada::getArmadaPivotByZone START", [
+                'zone_received' => $zone
+            ]);
+
+            //--------------------------------------------------
+            // 🔥 SP EXECUTION — PARAMETER WAJIB pakai @name!!!
+            //--------------------------------------------------
+            $rows = DB::connection('sqlsrv')->select(
+                "EXEC dbo.sp_GetFacilityArmadaPivotv2 @name = :name",
+                ['name' => $zone]
+            );
+
+            // Convert to array assoc
+            $rows = array_map(fn($r) => (array)$r, $rows);
+
+            Log::info("SCMAssetArmada::SP_Result_Count", [
+                'zone'  => $zone,
+                'count' => count($rows)
+            ]);
+
+            return [
+                'raw'   => $rows,
+                'react' => self::formatPivotForReact($rows)
+            ];
+
+        } catch (\Exception $e) {
+
+            Log::error("SCMAssetArmada::getArmadaPivotByZone ERROR", [
+                'zone'  => $zone,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+
+            throw new \Exception("Error executing SP GetFacilityArmadaPivotv2: " . $e->getMessage());
+        }
     }
 
-    try {
-        $pdo = DB::connection('sqlsrv')->getPdo();
 
-        // Pastikan SP name-nya benar: sp_GetFacilityArmadaPivotv2
-        $stmt = $pdo->prepare("EXEC dbo.sp_GetFacilityArmadaPivotv2 ?");
-        $stmt->execute([$facilityName]);
+    /**
+     * Format Pivot result for React frontend (dynamic columns)
+     */
+    private static function formatPivotForReact($rows)
+    {
+        $output = [];
 
-        // SP ini hanya punya 1 result set (pivot armada)
-        $armadaPivot = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        foreach ($rows as $r) {
 
-        return [
-            'pivot' => $armadaPivot,
-        ];
+            $item = [
+                'zone'         => $r['Zone'] ?? null,
+                'facility'     => $r['Facility_Name'] ?? null,
+                'source'       => $r['Source_DB'] ?? null,
+                'armada'       => [],
+                'total_armada' => 0,
+            ];
 
-    } catch (\Exception $e) {
-        throw new \Exception('Error executing SP GetFacilityArmadaPivotv2: ' . $e->getMessage());
+            foreach ($r as $key => $value) {
+
+                // Skip non-armada fields
+                if (in_array($key, ['Zone', 'Facility_Name', 'Source_DB'])) {
+                    continue;
+                }
+
+                // Convert null → 0
+                $value = (int) ($value ?? 0);
+
+                $item['armada'][$key] = $value;
+                $item['total_armada'] += $value;
+            }
+
+            $output[] = $item;
+        }
+
+        return $output;
     }
-}
-
-  
 }
