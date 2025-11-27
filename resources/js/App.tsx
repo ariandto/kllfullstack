@@ -4,7 +4,6 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import TrendDailyReport from "./pages/TrendDailyReport";
 import CompanyProfile from "./pages/CompanyProfile";
-import SummaryDcandHub from "./pages/SummaryDcandHub";
 import SummaryAsset from "./pages/SummaryAsset";
 
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -16,7 +15,6 @@ const App = () => (
     <Routes>
       <Route path="/admin/transport/report" element={<TrendDailyReport />} />
       <Route path="/admin/transport/scm-profile" element={<CompanyProfile />} />
-      <Route path="/admin/transport/summary-dc-hub" element={<SummaryDcandHub />} />
       <Route path="/admin/transport/assetscm" element={<SummaryAsset />} />
 
       {/* fallback */}
