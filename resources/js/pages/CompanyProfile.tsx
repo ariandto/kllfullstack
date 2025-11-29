@@ -88,12 +88,14 @@ const CompanyProfile = () => {
     };
 
     return (
-        <div className="content mb-5 pb-5" style={{ paddingBottom: "80px" }}>
-
+          <>
             <SCMNavbar />
             
+             {/* ZONE MULTI CHECKLIST - SAME LAYOUT AS FACILITY */}
+ <div className="content mb-5 pb-5" style={{ paddingBottom: "80px" }}>
+            
             {/* Facility Selector - Premium Style */}
-            <div className="content">
+            <div className="content mb-5 pb-5">
                 <div className="row align-items-center">
                     <div className="col-md-3">
                         <label className="form-label fw-bold text-dark mb-2 d-flex align-items-center gap-2">
@@ -133,17 +135,22 @@ const CompanyProfile = () => {
             </div>
 
             {/* Empty State */}
-            {!selectedFacility && !loadingPivot && (
-                <div className="card shadow-lg border-0 rounded-4" style={{ background: "rgba(255, 255, 255, 0.95)" }}>
-                    <div className="card-body text-center py-5">
-                        <div className="mb-4">
-                            <Building2 className="mx-auto text-primary opacity-50" size={80} />
-                        </div>
-                        
-                        <h3 className="fw-bold text-dark mb-2">Please Select Facility</h3>
-                    </div>
-                </div>
-            )}
+           {selectedFacility.length === 0 && (
+               <div className="card shadow-sm border-0 mt-3 p-5 text-center">
+           
+                   <div className="text-center">
+                       <Building2
+                           size={48}
+                           className="text-primary mb-3 opacity-50"
+                       />
+                   </div>
+           
+                   <h4 className="fw-bold text-dark">
+                       Please Select Facility
+                   </h4>
+           
+               </div>
+           )}
 
             {/* Loading State */}
             {loadingPivot && (
@@ -966,6 +973,7 @@ const CompanyProfile = () => {
                 </div>
             )}
         </div>
+         </>
     );
 };
 
