@@ -5,8 +5,16 @@ const SCMNavbar: React.FC = () => {
     const navigate = useNavigate();
     const location = useLocation();
 
-    // Cek apakah path saat ini adalah menu aktif
+    const menuItems = [
+        { label: "SCM Profile", path: "/admin/transport/scm-profile" },
+        { label: "Asset Armada", path: "/admin/transport/assetscm" },
+        { label: "SLA and Orders", path: "/admin/transport/sla" },
+    ];
+
     const isActive = (path: string) => location.pathname === path;
+
+    // ambil label halaman aktif
+    const activeLabel = menuItems.find((m) => isActive(m.path))?.label;
 
     return (
         <>
@@ -16,8 +24,9 @@ const SCMNavbar: React.FC = () => {
                 </h1>
             </div>
 
+            {/* DESKTOP NAVBAR */}
             <nav
-                className="navbar navbar-expand-lg navbar-dark"
+                className="navbar navbar-expand-lg navbar-dark d-none d-md-flex"
                 style={{
                     background: "transparent",
                     position: "sticky",
@@ -27,24 +36,9 @@ const SCMNavbar: React.FC = () => {
             >
                 <div className="container-fluid px-3">
 
-                    <button
-                        className="navbar-toggler"
-                        type="button"
-                        data-bs-toggle="collapse"
-                        data-bs-target="#coverageNavbar"
-                    >
-                        <span className="navbar-toggler-icon"></span>
-                    </button>
-
-                    <div className="collapse navbar-collapse" id="coverageNavbar">
-                        <ul className="navbar-nav ms-auto mb-2 mb-lg-0 d-flex align-items-center gap-3">
-
-                            {/* ITEM TEMPLATE */}
-                            {[
-                                { label: "SCM Profile", path: "/admin/transport/scm-profile" },
-                                { label: "Asset Armada", path: "/admin/transport/assetscm" },
-                                { label: "SLA and Orders", path: "/admin/transport/sla" },
-                            ].map((item) => (
+                    <div className="collapse navbar-collapse show">
+                        <ul className="navbar-nav ms-auto mb-2 d-flex align-items-center gap-3">
+                            {menuItems.map((item) => (
                                 <li className="nav-item" key={item.path}>
                                     <span
                                         onClick={() => navigate(item.path)}
@@ -61,11 +55,31 @@ const SCMNavbar: React.FC = () => {
                                     </span>
                                 </li>
                             ))}
-
                         </ul>
                     </div>
                 </div>
             </nav>
+
+            {/* MOBILE BREADCRUMB */}
+            <div className="mobile-breadcrumb d-md-none px-3 py-2">
+                {menuItems.map((item, index) => (
+                    <span
+                        key={item.path}
+                        onClick={() => navigate(item.path)}
+                        style={{
+                            fontSize: "13px",
+                            cursor: "pointer",
+                            color: isActive(item.path) ? "#0d6efd" : "#6c757d",
+                            fontWeight: isActive(item.path) ? "600" : "400",
+                        }}
+                    >
+                        {item.label}
+                        {index < menuItems.length - 1 && (
+                            <span style={{ color: "#999" }}> / </span>
+                        )}
+                    </span>
+                ))}
+            </div>
 
             {/* CUSTOM CSS */}
             <style>
@@ -73,16 +87,19 @@ const SCMNavbar: React.FC = () => {
                     .nav-link {
                         transition: all 0.25s ease-in-out;
                     }
-
                     .nav-link:hover {
                         color: #0d6efd !important;
                         border-bottom: 2px solid #0d6efd;
                     }
-
                     .active-nav {
                         color: #0d6efd !important;
                         border-bottom: 3px solid #0d6efd;
                         font-weight: bold;
+                    }
+
+                    .mobile-breadcrumb {
+                        background: #f8f9fa;
+                        border-radius: 6px;
                     }
                 `}
             </style>

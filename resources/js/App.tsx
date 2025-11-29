@@ -1,11 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom/client";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-
 import TrendDailyReport from "./pages/TrendDailyReport";
 import CompanyProfile from "./pages/CompanyProfile";
 import SummaryAsset from "./pages/SummaryAsset";
-
 import "bootstrap/dist/css/bootstrap.min.css";
 import "bootstrap-icons/font/bootstrap-icons.css";
 

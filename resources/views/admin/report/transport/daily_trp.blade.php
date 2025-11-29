@@ -807,104 +807,91 @@ document.addEventListener("DOMContentLoaded", () => {
   });
 
   /* =========================
-     FUNGSI PIE CHART RINGKASAN
+     FUNGSI PIE CHART RINGKASAN (REVISI SLA CUSTOMER)
      ========================= */
   function renderSummaryPieCharts(data) {
-  const summaryContainer = document.getElementById("summaryPieContainer");
-  if (!summaryContainer) return;
+    const summaryContainer = document.getElementById("summaryPieContainer");
+    if (!summaryContainer) return;
 
-  /* ==== Wrapper ==== */
-  summaryContainer.innerHTML = `
-    <div class="pie-summary-wrapper" 
-      style="
-        display:grid;
-        grid-template-columns:repeat(auto-fit,minmax(240px,1fr));
-        gap:16px;
-        align-items:stretch;
-      ">
-      
-      <div class="pie-card" style="background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:14px;">
-        <h6 class="fw-semibold mb-2 text-center" style="color:#0f766e;">
-          <i class="fas fa-clock me-2"></i>Ontime Armada Internal
-        </h6>
-        <div class="pie-chart-container" style="position:relative;height:200px;width:100%;">
-          <canvas id="pieOntime"></canvas>
+    summaryContainer.innerHTML = `
+      <div class="pie-summary-wrapper" 
+        style="display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px;">
+        
+        <div class="pie-card" style="background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:14px;">
+          <h6 class="fw-semibold mb-2 text-center" style="color:#0f766e;"><i class="fas fa-clock me-2"></i>Ontime Armada Internal</h6>
+          <div class="pie-chart-container" style="position:relative;height:200px;"><canvas id="pieOntime"></canvas></div>
         </div>
-      </div>
 
-      <div class="pie-card" style="background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:14px;">
-        <h6 class="fw-semibold mb-2 text-center" style="color:#2563eb;">
-          <i class="fas fa-award me-2"></i>SLA Customer
-        </h6>
-        <div class="pie-chart-container" style="position:relative;height:180px;width:100%;">
-          <canvas id="pieSLA"></canvas>
+        <div class="pie-card" style="background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:14px;">
+          <h6 class="fw-semibold mb-2 text-center" style="color:#2563eb;"><i class="fas fa-award me-2"></i>SLA Customer</h6>
+          <div class="pie-chart-container" style="position:relative;height:180px;"><canvas id="pieSLA"></canvas></div>
         </div>
-      </div>
 
-      <div class="pie-card" style="background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:14px;">
-        <h6 class="fw-semibold mb-2 text-center" style="color:#14b8a6;">
-          <i class="fas fa-truck me-2"></i>Utilisasi Armada
-        </h6>
-        <div class="pie-chart-container" style="position:relative;height:180px;width:100%;">
-          <canvas id="pieUtil"></canvas>
+        <div class="pie-card" style="background:#fff;border-radius:10px;box-shadow:0 2px 6px rgba(0,0,0,0.1);padding:14px;">
+          <h6 class="fw-semibold mb-2 text-center" style="color:#14b8a6;"><i class="fas fa-truck me-2"></i>Utilisasi Armada</h6>
+          <div class="pie-chart-container" style="position:relative;height:180px;"><canvas id="pieUtil"></canvas></div>
         </div>
+
       </div>
-    </div>
-  `;
+    `;
 
-  /* ==== Hitung Data ==== */
-  const monInt = data.monitoringInternal || [];
-  const totalMon = monInt.find((i) => i.TipeKiriman === "Total") || {};
-  const ontime = parseInt(totalMon.Ontime || 0);
-  const late = parseInt(totalMon.Late || 0);
-  const fulfill = parseInt(totalMon.Fulfill || 0);
-  const ontimePct = fulfill ? (ontime / fulfill * 100).toFixed(1) : 0;
-  const latePct = (100 - ontimePct).toFixed(1);
+    /* ==== HITUNG SLA CUSTOMER SESUAI DEFINISI ==== */
+    const slaCust = data.slaCustomer || [];
 
-  const slaCust = data.slaCustomer || [];
-  const totalRow = slaCust.find((i) => i.SLA?.toUpperCase() === "TOTAL");
-  const totalPct = parseFloat(totalRow?.Persentase || 0);
-  const stdTotal = parseFloat(totalRow?.STD || 100);
-  const gap = Math.max(stdTotal - totalPct, 0).toFixed(1);
+    const rowAntar = slaCust.find(i => i.SLA?.toLowerCase() === "do diantarkan");
+    const rowKirim = slaCust.find(i => i.SLA?.toLowerCase() === "do terkirim");
 
-  const util = data.armadaUtil || [];
-  const avgUtil = util.reduce((s, i, _, a) => s + (parseFloat(i.PctUtilization) || 0) / a.length, 0);
-  const avgIdle = util.reduce((s, i, _, a) => s + (parseFloat(i.PctIdle) || 0) / a.length, 0);
+    const doAntar = parseInt(rowAntar?.["Jumlah DO"] || 0);
+    const doKirim = parseInt(rowKirim?.["Jumlah DO"] || 0);
 
-  /* ==== Konfigurasi Chart ==== */
-  const configPie = (ctx, labels, values, colors) =>
-    new Chart(ctx, {
-      type: "doughnut",
-      data: { labels, datasets: [{ data: values, backgroundColor: colors, borderWidth: 1 }] },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        cutout: "65%",
-        plugins: {
-          legend: {
-            position: "bottom",
-            labels: { boxWidth: 12, font: { size: 11 }, color: "#374151" },
-          },
-          tooltip: {
-            callbacks: { label: (c) => `${c.label}: ${c.parsed}%` },
-          },
-        },
-      },
-    });
+    const slaPercent = doAntar > 0 ? ((doKirim / doAntar) * 100).toFixed(2) : 0;
 
-  /* ==== Render Chart ==== */
-  setTimeout(() => {
-    const p1 = document.getElementById("pieOntime");
-    const p2 = document.getElementById("pieSLA");
-    const p3 = document.getElementById("pieUtil");
-    if (p1) configPie(p1, ["Ontime", "Late"], [ontimePct, latePct], ["#22c55e", "#f97316"]);
-    if (p2) configPie(p2, ["% SLA", "Gap terhadap STD"], [totalPct.toFixed(1), gap], ["#3b82f6", "#f3506bff"]);
-    if (p3) configPie(p3, ["Utilisasi", "Idle"], [avgUtil.toFixed(1), avgIdle.toFixed(1)], ["#14b8a6", "#57dfd3ff"]);
-  }, 200);
-}
+    const stdSla = parseFloat(rowKirim?.STD || 0);
+    const gap = Math.max(stdSla - slaPercent, 0).toFixed(2);
+
+    /* ==== Ontime Armada Internal ==== */
+    const monInt = data.monitoringInternal || [];
+    const totalMon = monInt.find((i) => i.TipeKiriman === "Total") || {};
+    const ontime = parseInt(totalMon.Ontime || 0);
+    const fulfill = parseInt(totalMon.Fulfill || 0);
+    const ontimePct = fulfill ? (ontime / fulfill * 100).toFixed(1) : 0;
+    const latePct = (100 - ontimePct).toFixed(1);
+
+    /* ==== Utilisasi Armada ==== */
+    const util = data.armadaUtil || [];
+    const avgUtil = util.reduce((s, i, _, a) => s + (parseFloat(i.PctUtilization) || 0) / a.length, 0);
+    const avgIdle = util.reduce((s, i, _, a) => s + (parseFloat(i.PctIdle) || 0) / a.length, 0);
+
+    /* ==== Konfig Pie ==== */
+    const configPie = (ctx, labels, values, colors) =>
+      new Chart(ctx, {
+        type: "doughnut",
+        data: { labels, datasets: [{ data: values, backgroundColor: colors }] },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "65%",
+          plugins: {
+            legend: { position: "bottom", labels: { boxWidth: 12, font: { size: 11 } } }
+          }
+        }
+      });
+
+    /* ==== Render ==== */
+    setTimeout(() => {
+      if (document.getElementById("pieOntime")) 
+        configPie(pieOntime, ["Ontime", "Late"], [ontimePct, latePct], ["#22c55e", "#f97316"]);
+
+      if (document.getElementById("pieSLA")) 
+        configPie(pieSLA, ["% SLA", "Gap terhadap STD"], [slaPercent, gap], ["#3b82f6", "#ef4444"]);
+
+      if (document.getElementById("pieUtil")) 
+        configPie(pieUtil, ["Utilisasi", "Idle"], [avgUtil.toFixed(1), avgIdle.toFixed(1)], ["#14b8a6", "#57dfd3ff"]);
+    }, 200);
+  }
 
   /* =========================
-     FORM SUBMIT HANDLER
+     SUBMIT FORM
      ========================= */
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
@@ -916,10 +903,10 @@ document.addEventListener("DOMContentLoaded", () => {
     container.innerHTML = `<div class="text-center p-4"><div class="spinner-border"></div><p>Memuat data...</p></div>`;
 
     const payload = {
-  facility: facilitySelect.value,
-  date: document.getElementById("date").value,
-  key1: "WMWHSE4RTL"
-};
+      facility: facilitySelect.value,
+      date: document.getElementById("date").value,
+      key1: "WMWHSE4RTL"
+    };
 
     const startTime = performance.now();
 
@@ -929,18 +916,17 @@ document.addEventListener("DOMContentLoaded", () => {
         headers: { "Content-Type": "application/json", "X-CSRF-TOKEN": "{{ csrf_token() }}" },
         body: JSON.stringify(payload)
       });
+
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
       const result = await res.json();
-      const endTime = performance.now();
-      const execTime = ((endTime - startTime) / 1000).toFixed(2);
+      const execTime = ((performance.now() - startTime) / 1000).toFixed(2);
 
       if (result && result.data) {
         const d = result.data;
 
-        // ===== PIE CHARTS =====
         renderSummaryPieCharts(d);
 
-        // ===== RENDER SEMUA TABEL DAN BAGIAN =====
         container.innerHTML = safeJoinSections([
           buildSLATable(d),
           buildMonitoringHtml(d, "monitoringExternal"),
@@ -955,28 +941,27 @@ document.addEventListener("DOMContentLoaded", () => {
           buildDriverUtilHtml(d)
         ]);
 
-        // ===== Render Chart SLA & Monitoring Internal =====
         setTimeout(() => renderSLAChartAndMonitoring(d), 300);
 
-        // ===== Toast success =====
-        showToast(`✅ Data berhasil dimuat untuk ${payload.facility} (${payload.date})`);
-        showToast(`⏱️ Waktu eksekusi: ${execTime} detik`, 7000);
+        showToast(`✅ Data berhasil dimuat untuk ${payload.facility}`);
+        showToast(`⏱️ Eksekusi: ${execTime} detik`, 7000);
+
       } else {
         container.innerHTML = `<div class="alert alert-warning">⚠️ Tidak ada data ditemukan.</div>`;
       }
+
     } catch (err) {
-      console.error("Fetch error:", err);
-      container.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i>Terjadi kesalahan: ${err.message}</div>`;
-    } finally {
-      btn.classList.remove("btn-loading");
-      spinnerOverlay.classList.add("d-none");
-      btnText.classList.remove("btn-text-hidden");
-      btn.disabled = false;
+      container.innerHTML = `<div class="alert alert-danger"><i class="fas fa-exclamation-triangle me-2"></i> ${err.message}</div>`;
     }
+
+    btn.classList.remove("btn-loading");
+    spinnerOverlay.classList.add("d-none");
+    btnText.classList.remove("btn-text-hidden");
+    btn.disabled = false;
   });
 
   /* =========================
-     TOAST NOTIFICATION
+     TOAST
      ========================= */
   window.showToast = function (message, duration = 5000) {
     const container = document.getElementById("toastContainer");
@@ -998,6 +983,6 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 </script>
 
+
 <div class="toast-container" id="toastContainer"></div>
 @endsection
-

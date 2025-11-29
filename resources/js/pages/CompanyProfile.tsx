@@ -14,6 +14,8 @@ const CompanyProfile = () => {
     const [loadingPivot, setLoadingPivot] = useState<boolean>(false);
     const [jalurData, setJalurData] = useState<any[]>([]);
     const [showDetailModal, setShowDetailModal] = useState(false);
+    const [searchFacility, setSearchFacility] = useState("");
+    const [showFacilityList, setShowFacilityList] = useState(false);
 
     const normalizeAreaType = (areaName: string) => {
         if (!areaName) return "";
@@ -28,6 +30,8 @@ const CompanyProfile = () => {
         }
         return areaName;
     };
+
+
 
     useEffect(() => {
         const loadFacilities = async () => {
@@ -62,13 +66,6 @@ const CompanyProfile = () => {
         } finally {
             setLoadingPivot(false);
         }
-    };
-
-    const handleFacilityChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-        const value = e.target.value;
-        setSelectedFacility(value);
-        setPivotData(null);
-        if (value) fetchPivotData(value);
     };
 
     const imgUrl = pivotData?.Background_Image ? (pivotData.Background_Image.startsWith("https") ? pivotData.Background_Image : `${API_URL}/images/facilities/${pivotData.Background_Image}`) : null;
@@ -116,19 +113,71 @@ const CompanyProfile = () => {
                                 <span>Loading facilities...</span>
                             </div>
                         ) : (
-                            <select
-                                className="form-select form-select-lg shadow-sm border-2"
-                                value={selectedFacility}
-                                onChange={handleFacilityChange}
-                                style={{ borderColor: "#66dbeaff" }}
-                            >
-                                <option value="">-- Choose Facility --</option>
-                                {facilities.map((f, idx) => (
-                                    <option key={idx} value={f.Facility}>
-                                        {f.Facility}
-                                    </option>
-                                ))}
-                            </select>
+                            <div className="position-relative">
+    <input
+        type="text"
+        className="form-control form-control-lg shadow-sm mb-2"
+        placeholder="Search facility..."
+        value={searchFacility}
+        onFocus={() => setShowFacilityList(true)}
+        onChange={(e) => {
+            setSearchFacility(e.target.value);
+            setShowFacilityList(true);
+        }}
+        onKeyDown={(e) => {
+            if (e.key === "Enter") {
+                const found = facilities.find(f =>
+                    f.Facility.toLowerCase().includes(searchFacility.toLowerCase())
+                );
+                if (found) {
+                    setSelectedFacility(found.Facility);
+                    fetchPivotData(found.Facility);
+                    setShowFacilityList(false);   // ⬅️ tutup list habis pilih
+                }
+            }
+        }}
+        onBlur={() => {
+            // delay sedikit supaya klik di item masih kepanggil onClick dulu
+            setTimeout(() => setShowFacilityList(false), 150);
+        }}
+    />
+
+    {showFacilityList && searchFacility.trim().length > 0 && (
+        <div
+            className="position-absolute bg-white border rounded shadow-sm w-100"
+            style={{ maxHeight: "200px", overflowY: "auto", zIndex: 10 }}
+        >
+            {facilities
+                .filter(f =>
+                    f.Facility.toLowerCase().includes(searchFacility.toLowerCase())
+                )
+                .map((f, idx) => (
+                    <div
+                        key={idx}
+                        className="p-2 hover-bg"
+                        style={{ cursor: "pointer" }}
+                        onMouseDown={() => {
+                            // pakai onMouseDown biar kepanggil sebelum blur
+                            setSelectedFacility(f.Facility);
+                            setSearchFacility(f.Facility);
+                            fetchPivotData(f.Facility);
+                            setShowFacilityList(false); // ⬅️ tutup list
+                        }}
+                    >
+                        {f.Facility}
+                    </div>
+                ))}
+
+            {facilities.filter(f =>
+                f.Facility.toLowerCase().includes(searchFacility.toLowerCase())
+            ).length === 0 && (
+                <div className="p-2 text-muted">No facility found</div>
+            )}
+        </div>
+    )}
+</div>
+
+
                         )}
                     </div>
                 </div>
@@ -628,7 +677,7 @@ const CompanyProfile = () => {
                                                             paddingAngle={2}
                                                             dataKey="value"
                                                             labelLine={false}
-                                                            label={({ name, value }) => `${name} (${value})`}
+                                                            // label={({ name, value }) => `${name} (${value})`}
                                                         >
                                                             {chartData.map((entry, index) => (
                                                                 <Cell key={index} fill={COLORS[index % COLORS.length]} />
@@ -637,23 +686,25 @@ const CompanyProfile = () => {
                                                         <Tooltip formatter={(value, name) => [`${value}`, name]} />
                                                     </PieChart>
                                                 </ResponsiveContainer>
-                                                <div className="row g-2 mt-2">
-                                                    {chartData.map((item, idx) => (
-                                                        <div key={idx} className="col-6">
-                                                            <div className="d-flex align-items-center gap-2 p-2 bg-light rounded">
-                                                                {/* ICON TRUCK BERWARNA */}
-                                                                <Truck
-                                                                    size={26}
-                                                                    style={{
-                                                                        color: COLORS[idx % COLORS.length],
-                                                                    }}
-                                                                />
+                                 <div className="row g-2 mt-2">
+    {chartData.map((item, idx) => (
+        <div key={idx} className="col-6">
+            <div className="d-flex align-items-center gap-2 p-2 bg-light rounded">
+                <Truck
+                    size={26}
+                    style={{
+                        color: COLORS[idx % COLORS.length],
+                    }}
+                />
 
-                                                                <small className="text-truncate fw-medium">{item.name}</small>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
+                <small className="text-truncate fw-medium">
+                    {item.name} ({item.value})
+                </small>
+            </div>
+        </div>
+    ))}
+</div>
+
                                             </>
                                         );
                                     })()}
